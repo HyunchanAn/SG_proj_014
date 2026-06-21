@@ -62,11 +62,11 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
             res = await client.post(f"{MODULE_013_URL}/verify", json=payload)
             if res.status_code != 200:
                 logger.error(f"Module 013 returned status {res.status_code}")
-                return VerificationResult(is_passed=False, predicted_properties={}, error_rates={}, confidence_score=0.0)
+                return VerificationResult(is_passed=False, predicted_properties={}, error_rates={}, confidence_score=0.0, feedback_signal=None)
             return VerificationResult(**res.json())
     except Exception as e:
         logger.error(f"Module 013 error: {e}")
-        return VerificationResult(is_passed=False, predicted_properties={}, error_rates={}, confidence_score=0.0)
+        return VerificationResult(is_passed=False, predicted_properties={}, error_rates={}, confidence_score=0.0, feedback_signal=None)
 
 async def orchestrate_workflow(req: OrchestrationRequest):
     # Step 1: Processability (011)

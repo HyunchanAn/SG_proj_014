@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 from src.main import app
 from src.schemas import ProcessabilityResult, MatchingResponse, VerificationResult
 
