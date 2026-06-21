@@ -2,3 +2,6 @@
 - SG_proj_014 중앙 오케스트레이터 기본 프로젝트 구조 생성 (src/, configs/, tests/).
 - ADR 0001을 반영하여 Pydantic 데이터 모델 (011, 012, 013 계약)을 src/schemas.py에 구현.
 - 각 모듈을 연쇄 호출하는 orchestrator.py 작성 및 FastAPI router 추가 (main.py).
+
+
+[2026-06-22] 대규모 아키텍처 통일성 반영: pyproject.toml, Dockerfile, docker-compose.yml, CI/CD 추가 완료.
