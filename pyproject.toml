@@ -34,3 +34,7 @@ explicit_package_bases = true
 
 [tool.setuptools]
 packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
