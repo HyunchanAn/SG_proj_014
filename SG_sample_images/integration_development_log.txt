@@ -1,0 +1,10 @@
+# 014 모듈 통합 파이프라인 개발 일지
+
+## 2026-06-26
+- **SI 인계용 API 고도화 (데이터 배관)**
+  - `src/schemas.py`: Step 1의 계측 데이터(`Step1Metrics`)와 Step 3의 타겟 데이터(`Step2Target`)를 명시적으로 분리하여 Pydantic 모델로 구조화함.
+  - 도메인 예외 처리(Edge Cases) 도입: SFE(0~150), Tg(-100~200), 곡률(0.000001 이상) 등 물리적 한계값을 임의로 설정하여 프론트엔드가 뻗지 않도록 방어선(HTTP 422) 구축 완료 (추후 도메인 전문가 검증 요망).
+  - `src/main.py`: E2E 오케스트레이션 엔드포인트(`/orchestrate`)에 Swagger API 자동 명세(summary, description, 에러 응답) 추가.
+- **보고서 작성**
+  - E2E 아키텍처 및 흐름도(v2.1) 작성 완료.
+  - 대내외 보고용 초정밀 성능 평가 및 아키텍처 검증 보고서(`Corporate_E2E_Validation_Report.md`) 작성 완료.

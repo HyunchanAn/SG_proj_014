@@ -15,7 +15,7 @@ async def call_module_011_processability(req: OrchestrationRequest) -> Processab
     logger.info(f"Calling module 011 at {MODULE_011_URL}")
     payload = {
         "normal_vector_data": req.normal_vector_data,
-        "curvature_radius": req.curvature_radius,
+        "curvature_radius": req.metrics.curvature_radius,
         "material_stiffness": req.material_stiffness
     }
     try:
@@ -33,8 +33,8 @@ async def call_module_012_matching(req: OrchestrationRequest, proc_level: int) -
     logger.info(f"Calling module 012 at {MODULE_012_URL}")
     payload = {
         "substrate_id": req.substrate_id,
-        "surface_energy": req.surface_energy,
-        "roughness": req.roughness,
+        "surface_energy": req.metrics.surface_energy,
+        "roughness": req.metrics.roughness,
         "finish_type": req.finish_type,
         "required_processability_level": proc_level
     }
@@ -52,7 +52,11 @@ async def call_module_012_matching(req: OrchestrationRequest, proc_level: int) -
 async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> VerificationResult:
     logger.info(f"Calling module 013 at {MODULE_013_URL}")
     payload = {
-        "target_properties": {"adhesion": 10.0, "viscosity": 100.0},
+        "target_properties": {
+            "adhesion": req.target.target_adhesion, 
+            "viscosity": req.target.target_viscosity,
+            "tg": req.target.target_tg
+        },
         "xgboost_prediction": {"adhesion": 8.0, "viscosity": 90.0},
         "ir_gnn_features": [0.1, 0.2, 0.3],
         "current_iteration": 1
