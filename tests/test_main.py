@@ -9,14 +9,21 @@ client = TestClient(app)
 @pytest.mark.anyio
 @patch("src.orchestrator.call_module_011_processability")
 @patch("src.orchestrator.call_module_012_matching")
-async def test_orchestrate_matched(mock_matching, mock_processability):
-    # Mock Step 1 & 2
+@patch("src.orchestrator.call_module_013_reverse_engineering")
+async def test_orchestrate_matched(mock_rev, mock_matching, mock_processability):
+    # Mock Step 1, 2 & 3
     mock_processability.return_value = ProcessabilityResult(
         level=2, is_fallback=False, reason="Test reason"
     )
     mock_matching.return_value = MatchingResponse(
         recommendations=[{"product_code": "PRD-001", "match_score": 85.0, "match_reason": {}}],
         is_successful=True
+    )
+    mock_rev.return_value = VerificationResult(
+        is_passed=True,
+        predicted_properties={"adhesion": 9.5},
+        error_rates={"adhesion": 0.05},
+        confidence_score=0.95
     )
     
     payload = {
