@@ -33,3 +33,6 @@
 - 시각화 검증 결과 이미지 파일 저장 위치를 organized/ 디렉토리로 통합 설정하여 보고서 연동 오류 원천 방지.
 - organized/ 디렉토리에 갱신 적재된 실물 동전 포커싱 완료 이미지를 상위 SG_sample_images/ 경로로 복사 및 동기화 수행 (2B_reflect_verify_finish.jpg, BA_reflect_verify_finish.jpg, HL_reflect_verify_finish.jpg).
 - E2E 최종 보고서의 수치 정밀화 (HL 실측 조도 Ra = 0.28 um, 광택도 = 28.5 GU 적용).
+
+
+2026-06-27: 불필요한 빌드 캐시, pycache, egg-info 등 임시 파일 일괄 정리 및 루트 경로 대청소 완료.
