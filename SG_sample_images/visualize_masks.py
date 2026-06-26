@@ -6,17 +6,20 @@ import cv2
 import torch
 
 # 통합 모듈 경로 세팅
+sys.path.insert(0, "E:/Github/SG_proj_003")
 sys.path.append("E:/Github/SG_integration_002+003+007")
 os.chdir("E:/Github/SG_integration_002+003+007")
 torch.set_num_threads(1)
 
 from deepdrop_sfe import AIContactAngleAnalyzer, DropletPhysics, PerspectiveCorrector
 from vsams.analysis.surface_evaluator import SurfaceEvaluator
+import vsams
+print("VSAMS PATH IS:", vsams.__file__)
 from src.seg.sam2_wrapper import SAM2BaseWrapper
 from src.topo.depth_wrapper import DepthAnythingV2Wrapper
 
-ORGANIZED_DIR = "E:/Github/SG_sample_images/organized"
-OUTPUT_DIR = "E:/Github/SG_sample_images"
+ORGANIZED_DIR = "E:/Github/SG_proj_014/SG_sample_images/organized"
+OUTPUT_DIR = "E:/Github/SG_proj_014/SG_sample_images"
 
 def draw_mask_overlay(image_rgb, mask, color=(0, 255, 0), alpha=0.4):
     """
@@ -82,8 +85,8 @@ def main():
                     x1, y1, x2, y2 = map(int, box_arr)
                     cv2.rectangle(overlay_coin, (x1, y1), (x2, y2), (255, 255, 0), 4) # 노란색 사각형
                     
-                    # 파일 저장 (E:\Github\SG_sample_images 하위에 저장)
-                    out_coin_path = os.path.join(OUTPUT_DIR, f"{target_material}_{liquid}_verify_step1_coin.jpg")
+                    # 파일 저장 (E:\Github\SG_sample_images\organized 하위에 저장)
+                    out_coin_path = os.path.join(ORGANIZED_DIR, f"{target_material}_{liquid}_verify_step1_coin.jpg")
                     cv2.imwrite(out_coin_path, cv2.cvtColor(overlay_coin, cv2.COLOR_RGB2BGR))
                     print(f"-> Saved: {out_coin_path}")
                     
@@ -95,7 +98,7 @@ def main():
                         warped_bgr = corrector.warp_image(bgr, H, warped_size)
                         warped_rgb = cv2.cvtColor(warped_bgr, cv2.COLOR_BGR2RGB)
                         
-                        out_warp_path = os.path.join(OUTPUT_DIR, f"{target_material}_{liquid}_verify_step2_topview.jpg")
+                        out_warp_path = os.path.join(ORGANIZED_DIR, f"{target_material}_{liquid}_verify_step2_topview.jpg")
                         cv2.imwrite(out_warp_path, warped_bgr)
                         print(f"-> Saved: {out_warp_path}")
                         
@@ -128,7 +131,7 @@ def main():
                             dx1, dy1, dx2, dy2 = map(int, drop_box)
                             cv2.rectangle(overlay_drop, (dx1, dy1), (dx2, dy2), (0, 255, 255), 4)
                             
-                            out_drop_path = os.path.join(OUTPUT_DIR, f"{target_material}_{liquid}_verify_step3_droplet.jpg")
+                            out_drop_path = os.path.join(ORGANIZED_DIR, f"{target_material}_{liquid}_verify_step3_droplet.jpg")
                             cv2.imwrite(out_drop_path, cv2.cvtColor(overlay_drop, cv2.COLOR_RGB2BGR))
                             print(f"-> Saved: {out_drop_path}")
                         else:
@@ -145,7 +148,7 @@ def main():
                     if "error" not in res_v:
                         overlay_finish = vsams_eval.get_overlay_image(bgr_r, res_v)
                         
-                        out_finish_path = os.path.join(OUTPUT_DIR, f"{target_material}_reflect_verify_finish.jpg")
+                        out_finish_path = os.path.join(ORGANIZED_DIR, f"{target_material}_reflect_verify_finish.jpg")
                         overlay_finish.save(out_finish_path)
                         print(f"-> Saved: {out_finish_path}")
                         
@@ -169,7 +172,7 @@ def main():
                     d_vis = cv2.normalize(dmap, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
                     d_col = cv2.applyColorMap(d_vis, cv2.COLORMAP_INFERNO)
                     
-                    out_depth_path = os.path.join(OUTPUT_DIR, f"{target_material}_3d_verify_depth.jpg")
+                    out_depth_path = os.path.join(ORGANIZED_DIR, f"{target_material}_3d_verify_depth.jpg")
                     cv2.imwrite(out_depth_path, d_col)
                     print(f"-> Saved: {out_depth_path}")
 

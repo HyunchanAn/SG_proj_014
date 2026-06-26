@@ -1,8 +1,62 @@
 version: '3.8'
 
 services:
-  sg_proj_014:
-    build: .
+  # Data Hub
+  sg_proj_004:
+    build: ../SG_proj_004
+    ports:
+      - "8004:8000"
+    restart: unless-stopped
+
+  # Vision Modules (Step 1)
+  sg_proj_002:
+    build: ../SG_proj_002
+    ports:
+      - "8002:8000"
+    restart: unless-stopped
+  
+  sg_proj_003:
+    build: ../SG_proj_003
+    ports:
+      - "8003:8000"
+    restart: unless-stopped
+
+  sg_proj_007:
+    build: ../SG_proj_007
+    ports:
+      - "8007:8000"
+    restart: unless-stopped
+
+  # Decision & Machinability (Step 2)
+  sg_proj_011:
+    build: ../SG_proj_011
+    ports:
+      - "8011:8000"
+    restart: unless-stopped
+
+  sg_proj_012:
+    build: ../SG_proj_012
     ports:
       - "8012:8000"
     restart: unless-stopped
+
+  # Reverse Engineering (Step 3)
+  sg_proj_013:
+    build: ../SG_proj_013
+    ports:
+      - "8013:8000"
+    restart: unless-stopped
+
+  # Master Orchestrator
+  sg_proj_014:
+    build: .
+    ports:
+      - "8014:8000"
+    restart: unless-stopped
+    environment:
+      - MODULE_002_URL=http://sg_proj_002:8000
+      - MODULE_003_URL=http://sg_proj_003:8000
+      - MODULE_007_URL=http://sg_proj_007:8000
+      - MODULE_011_URL=http://sg_proj_011:8000
+      - MODULE_012_URL=http://sg_proj_012:8000
+      - MODULE_013_URL=http://sg_proj_013:8000
