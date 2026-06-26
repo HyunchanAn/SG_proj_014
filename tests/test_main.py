@@ -21,11 +21,19 @@ async def test_orchestrate_matched(mock_matching, mock_processability):
     
     payload = {
         "substrate_id": "sub-001",
-        "surface_energy": 35.0,
-        "roughness": 0.8,
         "finish_type": "Hairline",
+        "metrics": {
+            "surface_energy": 35.0,
+            "roughness": 0.8,
+            "gloss": 80.0,
+            "curvature_radius": 10.0
+        },
+        "target": {
+            "target_adhesion": 1000.0,
+            "target_tg": -20.0,
+            "target_viscosity": 3000.0
+        },
         "normal_vector_data": [0.1, 0.2],
-        "curvature_radius": 10.0,
         "material_stiffness": 100.0
     }
     
@@ -57,11 +65,19 @@ async def test_orchestrate_reverse_engineered(mock_rev, mock_matching, mock_proc
     
     payload = {
         "substrate_id": "sub-001",
-        "surface_energy": 35.0,
-        "roughness": 0.8,
         "finish_type": "Hairline",
+        "metrics": {
+            "surface_energy": 35.0,
+            "roughness": 0.8,
+            "gloss": 80.0,
+            "curvature_radius": 10.0
+        },
+        "target": {
+            "target_adhesion": 1000.0,
+            "target_tg": -20.0,
+            "target_viscosity": 3000.0
+        },
         "normal_vector_data": [0.1, 0.2],
-        "curvature_radius": 10.0,
         "material_stiffness": 100.0
     }
     
