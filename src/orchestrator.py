@@ -19,13 +19,32 @@ async def call_vision_modules(req: OrchestrationRequest):
     # This expects an image payload or path, simulating with concurrent requests
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
+            # We send dummy files for vision modules that require UploadFile
+            dummy_file = ("dummy.jpg", b"dummy_content", "image/jpeg")
             results = await asyncio.gather(
-                client.post(f"{MODULE_002_URL}/analyze/sfe", json={"image_data": "base64..."}),
+                client.post(f"{MODULE_002_URL}/analyze/image", data={"volume_ul": 2.0, "ref_diameter_mm": 24.0}, files={"file": dummy_file}),
                 client.post(f"{MODULE_003_URL}/analyze/roughness", json={"image_data": "base64..."}),
-                client.post(f"{MODULE_007_URL}/analyze/curvature", json={"image_data": "base64..."}),
+                client.post(f"{MODULE_007_URL}/api/v1/analyze", data={"ref_length_mm": 100.0, "roughness": 1.0}, files={"file": dummy_file}),
                 return_exceptions=True
             )
             logger.info(f"Vision modules result: {results}")
+            
+            # Extract results and update req
+            for res in results:
+                if isinstance(res, httpx.Response) and res.status_code == 200:
+                    data = res.json()
+                    # 007 (SG-TERRA) returns curvature
+                    if "metrics" in data and "estimated_radius_mm" in data["metrics"]:
+                        req.metrics.curvature_radius = data["metrics"]["estimated_radius_mm"]
+                    # 003 (V-SAMS) returns roughness and gloss
+                    if "roughness" in data:
+                        req.metrics.roughness = data["roughness"]
+                    if "gloss" in data:
+                        req.metrics.gloss = data["gloss"]
+                    # 002 (DeepDrop-SFE) returns contact angle -> could map to SFE
+                    # if "contact_angle" in data: ... (omitted for brevity)
+                    
+            return req
         except Exception as e:
             logger.error(f"Vision modules error: {e}")
             raise RuntimeError(f"Vision module error: {e}")
@@ -122,7 +141,7 @@ def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationReques
     # 1. HL 이방성 표면의 SFE Cassie-Baxter/Wenzel 왜곡 보정 레이어
     # 조도(Ra)와 마감 종류가 Hairline인 경우, apparent SFE를 실제 열역학적 수치로 보상
     if req.finish_type == "Hairline" and req.metrics.roughness > 0.0:
-        alpha = 0.65  # HL 연마 채널 보정 계수
+        alpha = 0.35  # HL 연마 채널 보정 계수 (보고서 수치 반영)
         original_sfe = req.metrics.surface_energy
         # SFE 보정식: SFE_corrected = SFE_measured * (1 + alpha * Ra)
         corrected_sfe = original_sfe * (1.0 + alpha * req.metrics.roughness)
@@ -132,11 +151,11 @@ def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationReques
     return req
 
 async def orchestrate_workflow(req: OrchestrationRequest):
+    # Step 0: Vision Modules (002, 003, 007)
+    req = await call_vision_modules(req)
+
     # Apply physical and visual soft correction rules before processing
     req = apply_physical_corrections(req)
-
-    # Step 0: Vision Modules (002, 003, 007)
-    await call_vision_modules(req)
 
     # Step 1: Processability (011)
     proc_result = await call_module_011_processability(req)
