@@ -36,3 +36,10 @@
   - organized/ 디렉토리에 갱신 적재된 실물 동전 포커싱 완료 이미지를 상위 SG_sample_images/ 경로로 복사 및 동기화 수행 (2B_reflect_verify_finish.jpg, BA_reflect_verify_finish.jpg, HL_reflect_verify_finish.jpg).
   - E2E 최종 보고서의 수치 정밀화 (HL 실측 조도 Ra = 0.28 um, 광택도 = 28.5 GU 적용).
 - 불필요한 빌드 캐시, pycache, egg-info 등 임시 파일 일괄 정리 및 루트 경로 대청소 완료.
+- 대용량 이미지 샘플 폴더(SG_sample_images)의 비효율적 용량 관리 문제 해결을 위한 방안 검토 및 향후 계획 수립
+  - 현황: SG_sample_images 폴더 내 테스트 이미지 및 보고서 등 총 80여 개 파일이 약 123MB를 차지하여 Git 리포지토리 용량 증가 및 push/pull 속도 저하를 유발하고 있음.
+  - 해결 방안 검토:
+    - 방안 A: 별도 리포지토리(SG_test_assets 등)로 이미지 및 보고서를 완전히 분리하고 git submodule로 관리하는 방안. 코드 저장소를 가볍게 유지할 수 있으나 서브모듈 관리 공수가 추가됨.
+    - 방안 B: Git LFS(Large File Storage)를 도입하여 구조 변경 없이 이미지를 저장소 밖에서 연동하는 방안. 관리 비용 및 무료 제공 한계 우려가 존재함.
+    - 방안 C: .gitignore에 등록하고 NAS 또는 클라우드 스토리지를 연동하여 로컬 다운로드 스크립트로 구성하는 방안. Git 용량 문제를 완전히 해결할 수 있음.
+  - 결정 및 계획: 장기적인 저장소 경량화와 협업 효율을 위해 방안 A(별도 자산 리포지토리 분리 후 git submodule 연동) 또는 방안 C를 추진하기로 결정함. 추후 정식으로 자산 리포지토리 분리 작업을 수행할 예정.
