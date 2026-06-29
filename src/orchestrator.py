@@ -101,44 +101,89 @@ async def call_module_012_matching(req: OrchestrationRequest, proc_level: int) -
 async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> VerificationResult:
     logger.info(f"Starting reverse engineering loop with {MODULE_013_URL}")
     MAX_ITERATIONS = 5
-    current_adhesion, current_viscosity = 0.0, 0.0
-    ir_gnn_features = [0.0, 0.0, 0.0]
+    
+    # Initial target properties based on request
+    current_targets = {
+        "측정_값": req.target.target_adhesion, 
+        "점도(cP)": req.target.target_viscosity,
+        "Tg": req.target.target_tg
+    }
+    
+    # Fixed context (mocked for this example)
+    fixed_ctx = {
+        "온도": 83,
+        "반응시간": 5,
+        "박리_각도": 90,
+        "금속_표면": req.finish_type
+    }
     
     for iteration in range(1, MAX_ITERATIONS + 1):
         logger.info(f"Iteration {iteration}/{MAX_ITERATIONS}")
-        payload = {
-            "target_properties": {
-                "adhesion": req.target.target_adhesion, 
-                "viscosity": req.target.target_viscosity,
-                "tg": req.target.target_tg
-            },
-            "xgboost_prediction": {"adhesion": current_adhesion, "viscosity": current_viscosity},
-            "ir_gnn_features": ir_gnn_features,
-            "current_iteration": iteration
-        }
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                res = await client.post(f"{MODULE_013_URL}/verify", json=payload)
-                if res.status_code != 200:
-                    logger.error(f"Module 013 returned status {res.status_code}")
+        
+        xgboost_prediction = {}
+        ir_gnn_features = []
+        best_recipe = {}
+        
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            try:
+                # 1. Call 001 (PolySim) to optimize recipe
+                logger.info(f"Calling 001 PolySim API: {config.MODULE_001_URL}/optimize")
+                res_001 = await client.post(
+                    f"{config.MODULE_001_URL}/optimize", 
+                    json={"target_properties": current_targets, "fixed_context": fixed_ctx}
+                )
+                if res_001.status_code == 200:
+                    data_001 = res_001.json()
+                    best_recipe = data_001.get("recipe", {})
+                    xgboost_prediction = data_001.get("predicted_properties", {})
+                    
+                # 2. Call 009 (IR GNN) to predict IR features based on the recipe
+                logger.info(f"Calling 009 IR GNN API: {config.MODULE_009_URL}/predict")
+                # Format recipe for 009 (smiles mapping is abstracted here, assuming 009 takes recipe directly or we just pass it)
+                res_009 = await client.post(
+                    f"{config.MODULE_009_URL}/predict",
+                    json={"smiles_list": list(best_recipe.keys()), "ratios": list(best_recipe.values())}
+                )
+                if res_009.status_code == 200:
+                    data_009 = res_009.json()
+                    ir_gnn_features = data_009.get("embedding", [0.0, 0.0, 0.0]) # Simplified feature array
+                    
+                # 3. Call 013 (QA Gateway) to verify
+                payload = {
+                    "target_properties": {
+                        "측정_값": req.target.target_adhesion, 
+                        "점도(cP)": req.target.target_viscosity,
+                        "Tg": req.target.target_tg
+                    },
+                    "xgboost_prediction": xgboost_prediction,
+                    "ir_gnn_features": ir_gnn_features,
+                    "current_iteration": iteration
+                }
+                
+                logger.info(f"Calling 013 QA Gateway API: {MODULE_013_URL}/verify")
+                res_013 = await client.post(f"{MODULE_013_URL}/verify", json=payload)
+                if res_013.status_code != 200:
+                    logger.error(f"Module 013 returned status {res_013.status_code}")
                     break
                 
-                result = VerificationResult(**res.json())
+                result = VerificationResult(**res_013.json())
                 if result.is_passed:
                     logger.info("Reverse engineering loop converged successfully.")
+                    # Attach the final recipe to the feedback signal or predicted properties for user
+                    result.predicted_properties["final_recipe"] = best_recipe
                     return result
                 else:
-                    # Update parameters from feedback signal for next iteration
-                    # (Dummy logic here assumes the signal provides updated properties)
+                    # Update target properties from feedback signal to adjust next optimization loop
                     if result.feedback_signal:
-                        current_adhesion += 1.0
-                        current_viscosity += 2.0
-                        ir_gnn_features = [x + 0.1 for x in ir_gnn_features]
-        except Exception as e:
-            logger.error(f"Module 013 error: {e}")
-            raise RuntimeError(f"Reverse Engineering Failed: {e}")
+                        logger.info(f"Feedback received: {result.feedback_signal}. Adjusting targets.")
+                        # Dummy adjustment logic based on feedback
+                        current_targets["측정_값"] += 10.0
+                        
+            except Exception as e:
+                logger.error(f"AI Loop error: {e}")
+                raise RuntimeError(f"Reverse Engineering Failed: {e}")
             
-    return VerificationResult(is_passed=False, predicted_properties={}, error_rates={}, confidence_score=0.0, feedback_signal="Max iterations reached")
+    return VerificationResult(is_passed=False, predicted_properties={}, error_rates={}, confidence_score=0.0, feedback_signal={"error": "Max iterations reached"})
 
 def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationRequest:
     # 1. HL 이방성 표면의 SFE Cassie-Baxter/Wenzel 왜곡 보정 레이어
