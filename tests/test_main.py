@@ -12,9 +12,11 @@ client = TestClient(app)
 @patch("src.orchestrator.call_module_012_matching")
 @patch("src.orchestrator.call_module_013_reverse_engineering")
 async def test_orchestrate_matched(mock_rev, mock_matching, mock_processability, mock_vision):
-    # Mock Vision, Step 1, 2 & 3
-    # Vision module returns the input req unchanged for testing
-    mock_vision.side_effect = lambda r: r
+    # Vision module returns a dict of vision features
+    mock_vision.return_value = {
+        "visual_metrics": {"porosity": 0.05, "surface_defects": 2},
+        "anisotropy_ratio": 1.2
+    }
     mock_processability.return_value = ProcessabilityResult(
         level=2, is_fallback=False, reason="Test reason"
     )
@@ -59,8 +61,11 @@ async def test_orchestrate_matched(mock_rev, mock_matching, mock_processability,
 @patch("src.orchestrator.call_module_012_matching")
 @patch("src.orchestrator.call_module_013_reverse_engineering")
 async def test_orchestrate_reverse_engineered(mock_rev, mock_matching, mock_processability, mock_vision):
-    # Mock Vision, Step 1, 2 (fails), 3 (succeeds)
-    mock_vision.side_effect = lambda r: r
+    # Vision module returns a dict of vision features
+    mock_vision.return_value = {
+        "visual_metrics": {"porosity": 0.05, "surface_defects": 2},
+        "anisotropy_ratio": 1.2
+    }
     mock_processability.return_value = ProcessabilityResult(
         level=4, is_fallback=False, reason="Hard material"
     )
