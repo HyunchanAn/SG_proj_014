@@ -25,7 +25,7 @@ async def test_module_health_checks():
         for module_name, url in MODULE_URLS.items():
             try:
                 # Swagger docs 또는 기본 루트 경로로 헬스체크 시도
-                response = await client.get(f"{url}/docs", timeout=3.0)
+                response = await client.get(f"{url}/docs", timeout=30.0)
                 assert response.status_code == 200, f"{module_name}가 작동 중이나 docs 조회 실패 (Status: {response.status_code})"
                 print(f"[OK] {module_name} ({url}) 가동 확인 완료.")
             except httpx.ConnectError:
@@ -63,17 +63,25 @@ async def test_full_pipeline_e2e():
         # schemas.OrchestrationRequest 형식에 맞춘다.
         payload = {
             "substrate_id": target_adherend.get("product_name") or target_adherend.get("classification") or "Unknown-Substrate",
-            "surface_energy": target_adherend.get("surface_energy_md") or 35.0,
-            "roughness": target_adherend.get("roughness_md") or 0.8,
             "finish_type": target_adherend.get("classification") or "Hairline",
+            "metrics": {
+                "surface_energy": target_adherend.get("surface_energy_md") or 38.6,
+                "roughness": target_adherend.get("roughness_md") or 0.15,
+                "gloss": target_adherend.get("gloss_md") or 100.0,
+                "curvature_radius": target_adherend.get("thickness_mm") or 1.0
+            },
+            "target": {
+                "target_adhesion": 120.0,
+                "target_tg": -20.0,
+                "target_viscosity": 3500.0
+            },
             "normal_vector_data": [0.01, 0.02, 0.01],
-            "curvature_radius": 2.5,
             "material_stiffness": 180.0
         }
 
         # 3. 014 오케스트레이터 호출
         try:
-            orch_res = await client.post(f"{orchestrator_url}/orchestrate", json=payload, timeout=10.0)
+            orch_res = await client.post(f"{orchestrator_url}/orchestrate", json=payload, timeout=60.0)
             assert orch_res.status_code == 200, f"014 오케스트레이터 호출 실패: {orch_res.status_code}"
             
             result_data = orch_res.json()

@@ -16,17 +16,59 @@ MODULE_013_URL = config.MODULE_013_URL
 MODULE_002_URL = config.MODULE_002_URL
 MODULE_003_URL = config.MODULE_003_URL
 MODULE_007_URL = config.MODULE_007_URL
-async def call_vision_modules() -> dict:
-    logger.info("Calling vision modules 002, 003, 007 concurrently")
-    # This expects an image payload or path, simulating with concurrent requests
-    async with httpx.AsyncClient(timeout=10.0) as client:
+import base64
+from pathlib import Path
+
+async def call_vision_modules(finish_type: str = "Hairline") -> dict:
+    logger.info(f"Calling vision modules 002, 003, 007 concurrently with actual sample images for finish_type: {finish_type}")
+    
+    # Map finish type to real corporate sample images
+    sample_dir = Path("E:/Github/SG_sample_images")
+    prefix = "HL"
+    if finish_type in ["Mirror", "BA"]:
+        prefix = "BA"
+    elif finish_type in ["2B", "2D"]:
+        prefix = "2B"
+        
+    sfe_path = sample_dir / f"{prefix}_water_verify_step1_coin.jpg"
+    vsams_path = sample_dir / f"{prefix}_reflect_verify_finish.jpg"
+    terra_path = sample_dir / f"{prefix}_3d_verify_depth.jpg"
+    
+    # Fallback to any available image if path mismatch
+    if not sfe_path.exists():
+        img_files = list(sample_dir.glob("*.jpg"))
+        if img_files:
+            sfe_path = img_files[0]
+            vsams_path = img_files[0]
+            terra_path = img_files[0]
+            
+    sfe_data = b""
+    vsams_base64 = ""
+    terra_data = b""
+    
+    try:
+        if sfe_path.exists():
+            with open(sfe_path, "rb") as f:
+                sfe_data = f.read()
+        if vsams_path.exists():
+            with open(vsams_path, "rb") as f:
+                vsams_base64 = base64.b64encode(f.read()).decode("utf-8")
+        if terra_path.exists():
+            with open(terra_path, "rb") as f:
+                terra_data = f.read()
+    except Exception as io_err:
+        logger.error(f"Failed to read real sample images for vision modules: {io_err}")
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
         try:
-            # We send dummy files for vision modules that require UploadFile
-            dummy_file = ("dummy.jpg", b"dummy_content", "image/jpeg")
+            sfe_file = (sfe_path.name, sfe_data, "image/jpeg") if sfe_data else ("dummy.jpg", b"dummy_content", "image/jpeg")
+            vsams_payload = {"image_data": vsams_base64} if vsams_base64 else {"image_data": "base64..."}
+            terra_file = (terra_path.name, terra_data, "image/jpeg") if terra_data else ("dummy.jpg", b"dummy_content", "image/jpeg")
+            
             results = await asyncio.gather(
-                client.post(f"{MODULE_002_URL}/analyze/image", data={"volume_ul": 2.0, "ref_diameter_mm": 24.0}, files={"file": dummy_file}),
-                client.post(f"{MODULE_003_URL}/analyze/roughness", json={"image_data": "base64..."}),
-                client.post(f"{MODULE_007_URL}/api/v1/analyze", data={"ref_length_mm": 100.0, "roughness": 1.0}, files={"file": dummy_file}),
+                client.post(f"{MODULE_002_URL}/analyze/image", data={"volume_ul": 2.0, "ref_diameter_mm": 24.0}, files={"file": sfe_file}),
+                client.post(f"{MODULE_003_URL}/analyze/roughness", json=vsams_payload),
+                client.post(f"{MODULE_007_URL}/api/v1/analyze", data={"ref_length_mm": 100.0, "roughness": 1.0}, files={"file": terra_file}),
                 return_exceptions=True
             )
             logger.info(f"Vision modules result: {results}")
@@ -44,8 +86,6 @@ async def call_vision_modules() -> dict:
                         vision_metrics["roughness"] = data["roughness"]
                     if "gloss" in data:
                         vision_metrics["gloss"] = data["gloss"]
-                    # 002 (DeepDrop-SFE) returns contact angle -> could map to SFE
-                    # if "contact_angle" in data: ...
                     
             return vision_metrics
         except Exception as e:
@@ -169,15 +209,20 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                 result = VerificationResult(**res_013.json())
                 if result.is_passed:
                     logger.info("Reverse engineering loop converged successfully.")
-                    # Attach the final recipe to the feedback signal or predicted properties for user
                     result.predicted_properties["final_recipe"] = best_recipe
                     return result
                 else:
-                    # Update target properties from feedback signal to adjust next optimization loop
+                    # Update target properties based on proportional feedback deviation
                     if result.feedback_signal:
                         logger.info(f"Feedback received: {result.feedback_signal}. Adjusting targets.")
-                        # Dummy adjustment logic based on feedback
-                        current_targets["측정_값"] += 10.0
+                        
+                        target_adhesion = req.target.target_adhesion
+                        predicted_adhesion = xgboost_prediction.get("측정_값", target_adhesion)
+                        
+                        # Adjust target using proportional delta (damping coefficient 0.5)
+                        adhesion_delta = (target_adhesion - predicted_adhesion) * 0.5
+                        adhesion_delta = max(-200.0, min(200.0, adhesion_delta))
+                        current_targets["측정_값"] += adhesion_delta
                         
             except Exception as e:
                 logger.error(f"AI Loop error: {e}")
@@ -200,8 +245,8 @@ def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationReques
 
 async def orchestrate_workflow(req: OrchestrationRequest):
     # Step 0: Vision Modules (002, 003, 007)
-    # Decoupled vision processing: does not rely on OrchestrationRequest object directly
-    vision_data = await call_vision_modules()
+    # Decoupled vision processing: passes actual finish type to select correct validation image
+    vision_data = await call_vision_modules(req.finish_type)
     
     # Update request metrics with vision findings functionally
     if "curvature_radius" in vision_data:

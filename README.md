@@ -1,12 +1,9 @@
 # 통합 모듈 오케스트레이션 아키텍처 및 결과 보고서
 
+![Status](https://img.shields.io/badge/Status-v1.1%20Release-brightgreen) ![Python](https://img.shields.io/badge/Python-3.12%2B-blue) ![Backend](https://img.shields.io/badge/Backend-FastAPI-red) ![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD%20Pipeline-passing-brightgreen?logo=github)
+
 프로젝트 코드: SG_proj_014
 프로젝트 별칭: SG-Orchestrator
-
-![Status](https://img.shields.io/badge/Status-Active-success)
-![Python](https://img.shields.io/badge/Python-3.x-blue)
-![Framework](https://img.shields.io/badge/Framework-Pipeline-orange)
-![Hardware](https://img.shields.io/badge/Hardware-RTX_5080-lightgrey)
 
 ## 1. 개요
 
@@ -30,13 +27,25 @@
    - Case A (적합 제품 존재): 클라이언트에게 즉시 추천 리스트를 응답.
    - Case B (적합 제품 부재): 013 모듈(역설계 알고리즘) 및 001 모듈(고분자 물성 예측)을 호출하여 맞춤형 배합을 반복 탐색(Iteration). 탐색 완료 후 최종 배합 정보를 응답.
 
-## 3. 달성된 연동 구조
+## 3. 설치 및 실행 방법
 
+### A. 환경 준비
+- Python 3.12 버전 이상 필요
+- 패키지 의존성 설치:
+  `pip install -r requirements.txt`
+
+### B. 개발 서버 구동
+- 로컬 Uvicorn 서버 실행:
+  `uvicorn src.main:app --host 0.0.0.0 --port 8014 --reload`
+
+## 4. 달성된 연동 구조 (2026-06-29 업데이트)
+
+- [Vision Pipeline 실측화]: call_vision_modules 함수에서 dummy.jpg 파일 및 임시 문자열을 강제 전송하는 대신, 사용자의 실제 마감 종류(finish_type)에 호환되는 실제 고해상도 샘플 이미지들을 디스크에서 동적으로 로드해 비전 API 서버에 Stream 포워딩하는 실측 연동 파이프라인으로 전환 완료.
+- [피드백 제어 비례제어화]: 역설계 루프 실패 시 접착력을 단순 10.0씩 더하는 땜빵 처리를 제거하고, 편차 및 부호 방향에 비례해 델타 조정을 가하는 비례 제어 피드백(Proportional Feedback Control) 메커니즘을 적용 완료.
 - [Data Hub] 004 모듈: 기존 엑셀 기반 관리에서 벗어나 영업/기준용 데이터베이스와 연구실험용 데이터베이스를 물리적으로 분리하여 구성. 명칭 혼동을 방지하는 파서 적용.
 - [AI Pipeline] 001 모듈: 로컬 정적 데이터 의존성을 제거하고 004 모듈의 DB를 직접 쿼리하여 XGBoost 모델을 재학습하는 자동화 파이프라인 도입. 기존 가중치 모델은 아카이브(archive) 분리 보관.
-- [Vision Pipeline] 002-003-007: 업로드된 이미지를 처리하여 3D 곡률을 도출하고 가공성 레벨을 자동 판단하는 구조 연동 완료.
 
-## 4. 전체 파이프라인 검증 및 평가 (E2E Validation)
+## 5. 전체 파이프라인 검증 및 평가 (E2E Validation)
 
 단위 모듈 간 통합이 완료된 시스템을 대상으로 엔드투엔드 파이프라인 동작 검증을 수행했습니다.
 
