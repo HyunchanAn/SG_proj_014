@@ -7,11 +7,14 @@ from src.schemas import ProcessabilityResult, MatchingResponse, VerificationResu
 client = TestClient(app)
 
 @pytest.mark.anyio
+@patch("src.orchestrator.call_vision_modules")
 @patch("src.orchestrator.call_module_011_processability")
 @patch("src.orchestrator.call_module_012_matching")
 @patch("src.orchestrator.call_module_013_reverse_engineering")
-async def test_orchestrate_matched(mock_rev, mock_matching, mock_processability):
-    # Mock Step 1, 2 & 3
+async def test_orchestrate_matched(mock_rev, mock_matching, mock_processability, mock_vision):
+    # Mock Vision, Step 1, 2 & 3
+    # Vision module returns the input req unchanged for testing
+    mock_vision.side_effect = lambda r: r
     mock_processability.return_value = ProcessabilityResult(
         level=2, is_fallback=False, reason="Test reason"
     )
@@ -51,11 +54,13 @@ async def test_orchestrate_matched(mock_rev, mock_matching, mock_processability)
     assert data["result"]["is_successful"] is True
 
 @pytest.mark.anyio
+@patch("src.orchestrator.call_vision_modules")
 @patch("src.orchestrator.call_module_011_processability")
 @patch("src.orchestrator.call_module_012_matching")
 @patch("src.orchestrator.call_module_013_reverse_engineering")
-async def test_orchestrate_reverse_engineered(mock_rev, mock_matching, mock_processability):
-    # Mock Step 1, 2 (fails), 3 (succeeds)
+async def test_orchestrate_reverse_engineered(mock_rev, mock_matching, mock_processability, mock_vision):
+    # Mock Vision, Step 1, 2 (fails), 3 (succeeds)
+    mock_vision.side_effect = lambda r: r
     mock_processability.return_value = ProcessabilityResult(
         level=4, is_fallback=False, reason="Hard material"
     )

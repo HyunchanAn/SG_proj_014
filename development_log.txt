@@ -43,3 +43,11 @@
     - 방안 B: Git LFS(Large File Storage)를 도입하여 구조 변경 없이 이미지를 저장소 밖에서 연동하는 방안. 관리 비용 및 무료 제공 한계 우려가 존재함.
     - 방안 C: .gitignore에 등록하고 NAS 또는 클라우드 스토리지를 연동하여 로컬 다운로드 스크립트로 구성하는 방안. Git 용량 문제를 완전히 해결할 수 있음.
   - 결정 및 계획: 장기적인 저장소 경량화와 협업 효율을 위해 방안 A(별도 자산 리포지토리 분리 후 git submodule 연동) 또는 방안 C를 추진하기로 결정함. 추후 정식으로 자산 리포지토리 분리 작업을 수행할 예정.
+
+---
+[2026-06-29 09:49:17]
+- 작업 내용:
+  1. tests/test_main.py: call_vision_modules Mocking 추가
+  2. cross_module_tests/test_e2e_pipeline.py: 비전 모듈(002, 003, 007) 헬스체크 URL 추가
+- 목적: E2E 파이프라인 무결성 확보 및 단위 테스트 의존성 제거 (외부 비판 대응)
+- 작업자: Antigravity (AI)

@@ -6,7 +6,10 @@ logger = logging.getLogger(__name__)
 
 # 각 모듈별 포트 정의
 MODULE_URLS = {
+    "002_VisionSFE": "http://localhost:8002",
+    "003_VisionRoughness": "http://localhost:8003",
     "004_Database": "http://localhost:8004",
+    "007_VisionCurvature": "http://localhost:8007",
     "011_Processability": "http://localhost:8011",
     "012_Matching": "http://localhost:8012",
     "013_ReverseEngineering": "http://localhost:8013",
