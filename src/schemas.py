@@ -45,10 +45,10 @@ class VerificationResult(BaseModel):
 
 # Orchestrator Request (Refactored for SI Handover)
 class Step1Metrics(BaseModel):
-    surface_energy: float = Field(..., description="표면 자유 에너지 (SFE, mN/m). 물방울 접촉각을 통해 계산된 값.", example=96.43)
-    roughness: float = Field(..., description="표면 조도 (Ra, um).", example=0.13)
-    gloss: float = Field(..., description="광택도 (GU).", example=100.0)
-    curvature_radius: float = Field(..., description="곡률 반경 (R, mm). 3D 분석을 통해 도출.", example=-0.0076)
+    surface_energy: float = Field(..., description="표면 자유 에너지 (SFE, mN/m). 물방울 접촉각을 통해 계산된 값.", json_schema_extra={"example": 96.43})
+    roughness: float = Field(..., description="표면 조도 (Ra, um).", json_schema_extra={"example": 0.13})
+    gloss: float = Field(..., description="광택도 (GU).", json_schema_extra={"example": 100.0})
+    curvature_radius: float = Field(..., description="곡률 반경 (R, mm). 3D 분석을 통해 도출.", json_schema_extra={"example": -0.0076})
 
     @field_validator("surface_energy")
     @classmethod
@@ -67,9 +67,9 @@ class Step1Metrics(BaseModel):
         return v
 
 class Step2Target(BaseModel):
-    target_adhesion: float = Field(..., description="목표 점착력 (gf/25mm)", example=1200.0)
-    target_tg: float = Field(..., description="목표 유리전이온도 (Tg, °C)", example=-20.0)
-    target_viscosity: float = Field(..., description="목표 점도 (cps)", example=3500.0)
+    target_adhesion: float = Field(..., description="목표 점착력 (gf/25mm)", json_schema_extra={"example": 1200.0})
+    target_tg: float = Field(..., description="목표 유리전이온도 (Tg, °C)", json_schema_extra={"example": -20.0})
+    target_viscosity: float = Field(..., description="목표 점도 (cps)", json_schema_extra={"example": 3500.0})
 
     @field_validator("target_tg")
     @classmethod
@@ -80,9 +80,9 @@ class Step2Target(BaseModel):
         return v
 
 class OrchestrationRequest(BaseModel):
-    substrate_id: str = Field(..., description="피착재 고유 ID", example="SUB_75BFJ")
-    finish_type: str = Field(..., description="마감 종류 (예: Hairline, Mirror)", example="Hairline")
+    substrate_id: str = Field(..., description="피착재 고유 ID", json_schema_extra={"example": "SUB_75BFJ"})
+    finish_type: str = Field(..., description="마감 종류 (예: Hairline, Mirror)", json_schema_extra={"example": "Hairline"})
     metrics: Step1Metrics
     target: Step2Target
-    normal_vector_data: list[float] = Field(..., description="3D 법선 벡터 데이터 시퀀스", example=[0.1, 0.2, 0.9])
-    material_stiffness: float = Field(..., description="소재 강성 (MPa)", example=200000.0)
+    normal_vector_data: list[float] = Field(..., description="3D 법선 벡터 데이터 시퀀스", json_schema_extra={"example": [0.1, 0.2, 0.9]})
+    material_stiffness: float = Field(..., description="소재 강성 (MPa)", json_schema_extra={"example": 200000.0})
