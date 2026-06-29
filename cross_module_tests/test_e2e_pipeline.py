@@ -1,3 +1,4 @@
+# 실제 도커 컴포즈(docker-compose) 컨테이너 환경에서 전체 14개 마이크로서비스 간 통신 무결성 및 통합 E2E 역설계 피드백 제어 루프 정상 작동을 확인하는 실전 통합 테스트 코드입니다.
 import pytest
 import httpx
 import logging

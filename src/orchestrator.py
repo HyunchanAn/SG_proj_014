@@ -23,7 +23,7 @@ async def call_vision_modules(finish_type: str = "Hairline") -> dict:
     logger.info(f"Calling vision modules 002, 003, 007 concurrently with actual sample images for finish_type: {finish_type}")
     
     # Map finish type to real corporate sample images
-    sample_dir = Path("E:/Github/SG_sample_images")
+    sample_dir = Path("E:/Github/SG_proj_015")
     prefix = "HL"
     if finish_type in ["Mirror", "BA"]:
         prefix = "BA"

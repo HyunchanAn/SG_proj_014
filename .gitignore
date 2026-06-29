@@ -14,3 +14,7 @@ htmlcov/
 
 # Environments
 .env
+
+# Legacy Data Folder
+SG_sample_images/
+SG_sample_images_old/

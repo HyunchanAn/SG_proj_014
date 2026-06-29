@@ -1,3 +1,4 @@
+# 마스터 오케스트레이터 모듈의 /orchestrate 엔드포인트 연동 및 Mocking 기반 제품 매칭(matched) / 역설계(reverse_engineered) 시나리오 정합성을 검증하는 테스트 코드입니다.
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch
