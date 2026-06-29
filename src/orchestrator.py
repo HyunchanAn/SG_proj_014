@@ -7,14 +7,16 @@ from src.schemas import (
 
 logger = logging.getLogger(__name__)
 
-MODULE_011_URL = os.getenv("MODULE_011_URL", "http://localhost:8011")
-MODULE_012_URL = os.getenv("MODULE_012_URL", "http://localhost:8012")
-MODULE_013_URL = os.getenv("MODULE_013_URL", "http://localhost:8013")
-MODULE_002_URL = os.getenv("MODULE_002_URL", "http://localhost:8002")
-MODULE_003_URL = os.getenv("MODULE_003_URL", "http://localhost:8003")
-MODULE_007_URL = os.getenv("MODULE_007_URL", "http://localhost:8007")
 import asyncio
-async def call_vision_modules(req: OrchestrationRequest):
+from src.config import config
+
+MODULE_011_URL = config.MODULE_011_URL
+MODULE_012_URL = config.MODULE_012_URL
+MODULE_013_URL = config.MODULE_013_URL
+MODULE_002_URL = config.MODULE_002_URL
+MODULE_003_URL = config.MODULE_003_URL
+MODULE_007_URL = config.MODULE_007_URL
+async def call_vision_modules() -> dict:
     logger.info("Calling vision modules 002, 003, 007 concurrently")
     # This expects an image payload or path, simulating with concurrent requests
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -29,22 +31,23 @@ async def call_vision_modules(req: OrchestrationRequest):
             )
             logger.info(f"Vision modules result: {results}")
             
-            # Extract results and update req
+            vision_metrics = {}
+            # Extract results
             for res in results:
                 if isinstance(res, httpx.Response) and res.status_code == 200:
                     data = res.json()
                     # 007 (SG-TERRA) returns curvature
                     if "metrics" in data and "estimated_radius_mm" in data["metrics"]:
-                        req.metrics.curvature_radius = data["metrics"]["estimated_radius_mm"]
+                        vision_metrics["curvature_radius"] = data["metrics"]["estimated_radius_mm"]
                     # 003 (V-SAMS) returns roughness and gloss
                     if "roughness" in data:
-                        req.metrics.roughness = data["roughness"]
+                        vision_metrics["roughness"] = data["roughness"]
                     if "gloss" in data:
-                        req.metrics.gloss = data["gloss"]
+                        vision_metrics["gloss"] = data["gloss"]
                     # 002 (DeepDrop-SFE) returns contact angle -> could map to SFE
-                    # if "contact_angle" in data: ... (omitted for brevity)
+                    # if "contact_angle" in data: ...
                     
-            return req
+            return vision_metrics
         except Exception as e:
             logger.error(f"Vision modules error: {e}")
             raise RuntimeError(f"Vision module error: {e}")
@@ -141,7 +144,7 @@ def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationReques
     # 1. HL 이방성 표면의 SFE Cassie-Baxter/Wenzel 왜곡 보정 레이어
     # 조도(Ra)와 마감 종류가 Hairline인 경우, apparent SFE를 실제 열역학적 수치로 보상
     if req.finish_type == "Hairline" and req.metrics.roughness > 0.0:
-        alpha = 0.35  # HL 연마 채널 보정 계수 (보고서 수치 반영)
+        alpha = config.alpha  # HL 연마 채널 보정 계수 (config 파일 수치 반영)
         original_sfe = req.metrics.surface_energy
         # SFE 보정식: SFE_corrected = SFE_measured * (1 + alpha * Ra)
         corrected_sfe = original_sfe * (1.0 + alpha * req.metrics.roughness)
@@ -152,7 +155,16 @@ def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationReques
 
 async def orchestrate_workflow(req: OrchestrationRequest):
     # Step 0: Vision Modules (002, 003, 007)
-    req = await call_vision_modules(req)
+    # Decoupled vision processing: does not rely on OrchestrationRequest object directly
+    vision_data = await call_vision_modules()
+    
+    # Update request metrics with vision findings functionally
+    if "curvature_radius" in vision_data:
+        req.metrics.curvature_radius = vision_data["curvature_radius"]
+    if "roughness" in vision_data:
+        req.metrics.roughness = vision_data["roughness"]
+    if "gloss" in vision_data:
+        req.metrics.gloss = vision_data["gloss"]
 
     # Apply physical and visual soft correction rules before processing
     req = apply_physical_corrections(req)

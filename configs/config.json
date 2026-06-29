@@ -1,0 +1,9 @@
+{
+  "physical_correction": {
+    "alpha": 0.35,
+    "Ra_base": 0.28
+  },
+  "workflow": {
+    "tolerance_percent": 5.0
+  }
+}
