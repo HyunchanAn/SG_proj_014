@@ -8,6 +8,18 @@ from src.schemas import (
 import asyncio
 from src.config import config
 
+# Core monomer to SMILES mapping for SG_proj_009 integration
+MONOMER_SMILES = {
+    "BA": "CCCCOC(=O)C=C",
+    "2-EHA": "CCCCC(CC)COC(=O)C=C",
+    "EA": "CCOC(=O)C=C",
+    "MMA": "CC(=C)C(=O)OC",
+    "AA": "C=CC(=O)O",
+    "2-HEMA": "CC(=C)C(=O)OCCO",
+    "St": "C=CC1=CC=CC=C1",
+    "VAc": "CC(=O)OC=C"
+}
+
 MODULE_011_URL = config.MODULE_011_URL
 MODULE_012_URL = config.MODULE_012_URL
 MODULE_013_URL = config.MODULE_013_URL
@@ -177,14 +189,26 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     
                 # 2. Call 009 (IR GNN) to predict IR features based on the recipe
                 logger.info(f"Calling 009 IR GNN API: {config.MODULE_009_URL}/predict")
-                # Format recipe for 009 (smiles mapping is abstracted here, assuming 009 takes recipe directly or we just pass it)
+                components = []
+                for monomer, ratio in best_recipe.items():
+                    smiles = MONOMER_SMILES.get(monomer, "C=CC(=O)O") # Fallback to Acrylic Acid
+                    components.append({
+                        "smiles": smiles,
+                        "ratio": float(ratio),
+                        "n": 10  # represent polymerized/cured state
+                    })
+                
                 res_009 = await client.post(
                     f"{config.MODULE_009_URL}/predict",
-                    json={"smiles_list": list(best_recipe.keys()), "ratios": list(best_recipe.values())}
+                    json={
+                        "components": components,
+                        "use_qc": False,
+                        "solvent": "None"
+                    }
                 )
                 if res_009.status_code == 200:
                     data_009 = res_009.json()
-                    ir_gnn_features = data_009.get("embedding", [0.0, 0.0, 0.0]) # Simplified feature array
+                    ir_gnn_features = data_009.get("transmittance", [0.0, 0.0, 0.0]) # Pass predicted transmittance spectrum
                     
                 # 3. Call 013 (QA Gateway) to verify
                 payload = {

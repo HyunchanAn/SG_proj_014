@@ -7,3 +7,4 @@
 2026-07-05 19:59:35.543 | WARNING  | src.main:validation_exception_handler:39 - API Validation Error on /orchestrate: [{'location': 'body -> substrate_series', 'message': 'Field required'}, {'location': 'body -> thickness_um', 'message': 'Field required'}, {'location': 'body -> target -> target_initial_adhesion', 'message': 'Field required'}, {'location': 'body -> target -> target_aged_adhesion', 'message': 'Field required'}]
 2026-07-05 19:59:36.323 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
 2026-07-05 19:59:47.215 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-05 21:25:34.756 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단

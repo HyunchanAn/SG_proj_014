@@ -94,7 +94,7 @@ async def test_full_pipeline_e2e_in_memory(in_memory_db):
         return_value=Response(200, json={"recipe": {"M1": 0.5, "M2": 0.5}, "predicted_properties": {"측정_값": 4800.0}})
     )
     respx.post(url__regex=r"http://.*/predict").mock(
-        return_value=Response(200, json={"embedding": [0.1, 0.2, 0.3]})
+        return_value=Response(200, json={"transmittance": [0.1, 0.2, 0.3]})
     )
     respx.post(url__regex=r"http://.*/verify").mock(
         return_value=Response(200, json={
