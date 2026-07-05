@@ -1,11 +1,9 @@
-import logging
 import os
 import httpx
+from loguru import logger
 from src.schemas import (
     OrchestrationRequest, ProcessabilityResult, MatchingResponse, VerificationResult
 )
-
-logger = logging.getLogger(__name__)
 
 import asyncio
 from src.config import config
