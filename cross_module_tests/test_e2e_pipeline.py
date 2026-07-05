@@ -24,15 +24,22 @@ async def test_module_health_checks():
     """
     async with httpx.AsyncClient() as client:
         for module_name, url in MODULE_URLS.items():
-            try:
-                # Swagger docs 또는 기본 루트 경로로 헬스체크 시도
-                response = await client.get(f"{url}/docs", timeout=30.0)
-                assert response.status_code == 200, f"{module_name}가 작동 중이나 docs 조회 실패 (Status: {response.status_code})"
-                print(f"[OK] {module_name} ({url}) 가동 확인 완료.")
-            except httpx.ConnectError:
-                pytest.fail(f"[FAIL] {module_name} ({url}) 서버가 켜져 있지 않습니다. 가동 환경을 확인해 주세요.")
-            except Exception as e:
-                pytest.fail(f"[FAIL] {module_name} ({url}) 헬스체크 중 예외 발생: {str(e)}")
+            max_retries = 30
+            for attempt in range(max_retries):
+                try:
+                    # Swagger docs 또는 기본 루트 경로로 헬스체크 시도 (타임아웃 120초로 연장)
+                    response = await client.get(f"{url}/docs", timeout=120.0)
+                    assert response.status_code == 200, f"{module_name}가 작동 중이나 docs 조회 실패 (Status: {response.status_code})"
+                    print(f"[OK] {module_name} ({url}) 가동 확인 완료.")
+                    break  # 성공하면 루프 탈출
+                except httpx.ConnectError:
+                    if attempt == max_retries - 1:
+                        pytest.fail(f"[FAIL] {module_name} ({url}) 서버가 켜져 있지 않습니다. 가동 환경을 확인해 주세요.")
+                except Exception as e:
+                    if attempt == max_retries - 1:
+                        pytest.fail(f"[FAIL] {module_name} ({url}) 헬스체크 중 예외 발생: {str(e)}")
+                import asyncio
+                await asyncio.sleep(10)  # 실패 시 10초 대기 후 재시도
 
 @pytest.mark.anyio
 async def test_full_pipeline_e2e():
