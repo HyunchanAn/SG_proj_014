@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional
 
 # SG_proj_011
@@ -67,20 +67,31 @@ class Step1Metrics(BaseModel):
         return v
 
 class Step2Target(BaseModel):
-    target_adhesion: float = Field(..., ge=0.0, description="목표 점착력 (gf/25mm)", json_schema_extra={"example": 1200.0})
-    target_tg: float = Field(..., ge=-80.0, le=80.0, description="목표 유리전이온도 (Tg, °C)", json_schema_extra={"example": -20.0})
+    target_initial_adhesion: float = Field(..., ge=0.0, description="목표 초기 점착력 (gf/25mm)", json_schema_extra={"example": 520.0})
+    target_aged_adhesion: float = Field(..., ge=0.0, description="목표 후기 경시 점착력 (gf/25mm)", json_schema_extra={"example": 990.0})
+    target_tg: float = Field(..., ge=-80.0, le=0.0, description="목표 유리전이온도 (Tg, °C)", json_schema_extra={"example": -20.0})
     target_viscosity: float = Field(..., ge=0.0, description="목표 점도 (cps)", json_schema_extra={"example": 3500.0})
 
     @field_validator("target_tg")
     @classmethod
     def check_tg(cls, v):
-        # 아크릴계 보호 필름 점착 수지의 중합 물리 한계치 (-80 ~ 80 °C) 매핑
-        if v < -80.0 or v > 80.0:
-            raise ValueError("[에러] 입력된 Tg 수치는 보호필름 점착제 수지 합성 한계를 벗어납니다. (허용치: -80 ~ 80 °C)")
+        # 아크릴계 보호 필름 점착 수지의 중합 물리 한계치 (-80 ~ 0 °C) 매핑
+        if v < -80.0 or v > 0.0:
+            raise ValueError("[에러] 입력된 Tg 수치는 보호필름 점착제 수지 합성 한계를 벗어납니다. (허용치: -80 ~ 0 °C)")
         return v
+        
+    @model_validator(mode='after')
+    def check_adhesion_growth(self):
+        if self.target_initial_adhesion > self.target_aged_adhesion:
+            from loguru import logger
+            logger.error("[DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단")
+            raise ValueError("초기 점착력이 후기 경시 점착력보다 클 수 없습니다.")
+        return self
 
 class OrchestrationRequest(BaseModel):
     substrate_id: str = Field(..., description="피착재 고유 ID", json_schema_extra={"example": "SUB_75BFJ"})
+    substrate_series: str = Field(..., description="기재 계열 (예: SGV, SGO, SGE)", json_schema_extra={"example": "SGV"})
+    thickness_um: float = Field(..., description="기재 두께 (um)", json_schema_extra={"example": 100.0})
     finish_type: str = Field(..., description="마감 종류 (예: Hairline, Mirror)", json_schema_extra={"example": "Hairline"})
     metrics: Step1Metrics
     target: Step2Target

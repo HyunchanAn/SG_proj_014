@@ -5,5 +5,21 @@
   },
   "workflow": {
     "tolerance_percent": 5.0
+  },
+  "rule_table": {
+    "processability_thickness_penalty": {
+      "SGV": {
+        "100": 1,
+        "50": 0
+      },
+      "SGO": {
+        "100": 1,
+        "50": 0
+      },
+      "SGE": {
+        "100": 1,
+        "50": -1
+      }
+    }
   }
 }

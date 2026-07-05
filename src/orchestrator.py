@@ -142,7 +142,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
     
     # Initial target properties based on request
     current_targets = {
-        "측정_값": req.target.target_adhesion, 
+        "측정_값": req.target.target_initial_adhesion, 
         "점도(cP)": req.target.target_viscosity,
         "Tg": req.target.target_tg
     }
@@ -189,7 +189,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                 # 3. Call 013 (QA Gateway) to verify
                 payload = {
                     "target_properties": {
-                        "측정_값": req.target.target_adhesion, 
+                        "측정_값": req.target.target_initial_adhesion, 
                         "점도(cP)": req.target.target_viscosity,
                         "Tg": req.target.target_tg
                     },
@@ -214,7 +214,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     if result.feedback_signal:
                         logger.info(f"Feedback received: {result.feedback_signal}. Adjusting targets.")
                         
-                        target_adhesion = req.target.target_adhesion
+                        target_adhesion = req.target.target_initial_adhesion
                         predicted_adhesion = xgboost_prediction.get("측정_값", target_adhesion)
                         
                         # Adjust target using proportional delta (damping coefficient 0.5)
@@ -265,6 +265,15 @@ async def orchestrate_workflow(req: OrchestrationRequest):
 
             # Step 1: Processability (011)
             proc_result = await call_module_011_processability(req)
+            
+            # Apply substrate thickness penalty
+            penalty_table = config.processability_thickness_penalty
+            series_dict = penalty_table.get(req.substrate_series, {})
+            penalty = series_dict.get(str(int(req.thickness_um)), 0)
+            
+            if penalty != 0:
+                logger.info(f"[Task {task_id}] Applying thickness penalty {penalty} for {req.substrate_series} {req.thickness_um}um")
+                proc_result.level = max(1, min(5, proc_result.level + penalty))
             
             # Step 2: Matching (012)
             match_result = await call_module_012_matching(req, proc_result.level)

@@ -114,6 +114,8 @@ async def test_full_pipeline_e2e_in_memory(in_memory_db):
         
         payload = {
             "substrate_id": target_adherend["product_name"],
+            "substrate_series": "SGV",
+            "thickness_um": 100.0,
             "finish_type": target_adherend["classification"],
             "metrics": {
                 "surface_energy": target_adherend["surface_energy_md"],
@@ -122,7 +124,8 @@ async def test_full_pipeline_e2e_in_memory(in_memory_db):
                 "curvature_radius": 1.0 # mock thickness as radius
             },
             "target": {
-                "target_adhesion": 5000.0,  # 극한 스펙 주입
+                "target_initial_adhesion": 5000.0,  # 극한 스펙 주입
+                "target_aged_adhesion": 5500.0,
                 "target_tg": -20.0,
                 "target_viscosity": 3500.0
             },

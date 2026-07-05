@@ -21,6 +21,7 @@ class PipelineConfig:
         # Parse configurations
         self.physical = self._config.get("physical_correction", {})
         self.workflow = self._config.get("workflow", {})
+        self.rule_table = self._config.get("rule_table", {})
 
         # Physical Constants
         self.alpha = self.physical.get("alpha", 0.35)
@@ -28,6 +29,9 @@ class PipelineConfig:
 
         # Workflow Constants
         self.tolerance_percent = self.workflow.get("tolerance_percent", 5.0)
+        
+        # Rule Table
+        self.processability_thickness_penalty = self.rule_table.get("processability_thickness_penalty", {})
 
         # External URLs (loaded from environment)
         self.MODULE_002_URL = os.getenv("MODULE_002_URL", "http://localhost:8002")
