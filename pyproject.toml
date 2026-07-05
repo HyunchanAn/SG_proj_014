@@ -41,5 +41,12 @@ explicit_package_bases = true
 packages = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "cross_module_tests"]
+
+[tool.coverage.run]
+omit = [
+    "tests/*",
+    "cross_module_tests/*",
+    "SG_proj_*/*"
+]
 
