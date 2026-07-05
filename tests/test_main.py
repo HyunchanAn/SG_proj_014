@@ -34,6 +34,8 @@ async def test_orchestrate_matched(mock_rev, mock_matching, mock_processability,
     
     payload = {
         "substrate_id": "sub-001",
+        "substrate_series": "SGV",
+        "thickness_um": 100.0,
         "finish_type": "Hairline",
         "metrics": {
             "surface_energy": 35.0,
@@ -42,11 +44,12 @@ async def test_orchestrate_matched(mock_rev, mock_matching, mock_processability,
             "curvature_radius": 10.0
         },
         "target": {
-            "target_adhesion": 1000.0,
+            "target_initial_adhesion": 1000.0,
+            "target_aged_adhesion": 1200.0,
             "target_tg": -20.0,
             "target_viscosity": 3000.0
         },
-        "normal_vector_data": [0.1, 0.2],
+        "normal_vector_data": [0.1, 0.2, 0.9],
         "material_stiffness": 100.0
     }
     
@@ -83,6 +86,8 @@ async def test_orchestrate_reverse_engineered(mock_rev, mock_matching, mock_proc
     
     payload = {
         "substrate_id": "sub-001",
+        "substrate_series": "SGV",
+        "thickness_um": 100.0,
         "finish_type": "Hairline",
         "metrics": {
             "surface_energy": 35.0,
@@ -91,11 +96,12 @@ async def test_orchestrate_reverse_engineered(mock_rev, mock_matching, mock_proc
             "curvature_radius": 10.0
         },
         "target": {
-            "target_adhesion": 1000.0,
+            "target_initial_adhesion": 1000.0,
+            "target_aged_adhesion": 1200.0,
             "target_tg": -20.0,
             "target_viscosity": 3000.0
         },
-        "normal_vector_data": [0.1, 0.2],
+        "normal_vector_data": [0.1, 0.2, 0.9],
         "material_stiffness": 100.0
     }
     
