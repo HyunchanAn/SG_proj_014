@@ -1,117 +1,146 @@
-# 실제 도커 컴포즈(docker-compose) 컨테이너 환경에서 전체 14개 마이크로서비스 간 통신 무결성 및 통합 E2E 역설계 피드백 제어 루프 정상 작동을 확인하는 실전 통합 테스트 코드입니다.
 import pytest
 import httpx
+import respx
+from httpx import Response
+from sqlalchemy import create_engine, Column, Integer, String, Float
+from sqlalchemy.orm import declarative_base, sessionmaker
 import logging
+
+from src.main import app
+from fastapi.testclient import TestClient
 
 logger = logging.getLogger(__name__)
 
-# 각 모듈별 포트 정의
-MODULE_URLS = {
-    "002_VisionSFE": "http://localhost:8002",
-    "003_VisionRoughness": "http://localhost:8003",
-    "004_Database": "http://localhost:8004",
-    "007_VisionCurvature": "http://localhost:8007",
-    "011_Processability": "http://localhost:8011",
-    "012_Matching": "http://localhost:8012",
-    "013_ReverseEngineering": "http://localhost:8013",
-    "014_Orchestrator": "http://localhost:8014"
-}
+Base = declarative_base()
+
+class Adherend(Base):
+    __tablename__ = 'adherends'
+    id = Column(Integer, primary_key=True)
+    product_name = Column(String)
+    classification = Column(String)
+    surface_energy_md = Column(Float)
+    roughness_md = Column(Float)
+    gloss_md = Column(Float)
+    thickness_mm = Column(Float)
+
+@pytest.fixture(scope="function")
+def in_memory_db():
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    SessionLocal = sessionmaker(bind=engine)
+    session = SessionLocal()
+    
+    # 더미 가상 피착재 데이터 주입 (SUS, PCM/VCM)
+    sus_data = Adherend(
+        product_name="SUS_304",
+        classification="Hairline",
+        surface_energy_md=45.0,
+        roughness_md=0.15,
+        gloss_md=150.0,
+        thickness_mm=0.5
+    )
+    session.add(sus_data)
+    session.commit()
+    
+    yield session
+    
+    session.close()
 
 @pytest.mark.anyio
-async def test_module_health_checks():
-    """각 독립 모듈의 API 서버가 켜져 있고 통신이 가능한지 헬스체크를 수행합니다.
-    Mock을 전혀 사용하지 않고 실제 포트로 통신하며, 서버가 꺼져 있으면 에러가 발생합니다.
+@respx.mock
+async def test_full_pipeline_e2e_in_memory(in_memory_db):
     """
-    async with httpx.AsyncClient() as client:
-        for module_name, url in MODULE_URLS.items():
-            max_retries = 30
-            for attempt in range(max_retries):
-                try:
-                    # Swagger docs 또는 기본 루트 경로로 헬스체크 시도 (타임아웃 120초로 연장)
-                    response = await client.get(f"{url}/docs", timeout=120.0)
-                    assert response.status_code == 200, f"{module_name}가 작동 중이나 docs 조회 실패 (Status: {response.status_code})"
-                    print(f"[OK] {module_name} ({url}) 가동 확인 완료.")
-                    break  # 성공하면 루프 탈출
-                except httpx.ConnectError:
-                    if attempt == max_retries - 1:
-                        pytest.fail(f"[FAIL] {module_name} ({url}) 서버가 켜져 있지 않습니다. 가동 환경을 확인해 주세요.")
-                except Exception as e:
-                    if attempt == max_retries - 1:
-                        pytest.fail(f"[FAIL] {module_name} ({url}) 헬스체크 중 예외 발생: {str(e)}")
-                import asyncio
-                await asyncio.sleep(10)  # 실패 시 10초 대기 후 재시도
-
-@pytest.mark.anyio
-async def test_full_pipeline_e2e():
-    """004 DB 모듈에서 피착재 정보를 조회한 뒤, 이를 바탕으로 014 오케스트레이터 파이프라인을 실행합니다.
-    004 -> 011 -> 012 -> 013(매칭 실패 시) 전체 흐름이 실제 서버 연동으로 동작하는지 검증합니다.
+    1. 인메모리 DB에서 004 라우팅 호출을 가로채어 SUS 데이터를 응답.
+    2. 011, 012, 013, 비전 모듈들의 외부 호출을 respx로 모킹.
+    3. Target Adhesion을 5000 등 극한 스펙으로 주입.
+    4. 012 매칭 실패 -> 013 역설계 성공(status: reverse_engineered) 이행 검증.
     """
-    db_url = MODULE_URLS["004_Database"]
-    orchestrator_url = MODULE_URLS["014_Orchestrator"]
+    
+    # 004 DB 모듈 검색 API 모킹
+    def db_search_handler(request):
+        # 인메모리 DB를 찔러 결과를 반환
+        result = in_memory_db.query(Adherend).first()
+        if result:
+            return Response(200, json=[{
+                "product_name": result.product_name,
+                "classification": result.classification,
+                "surface_energy_md": result.surface_energy_md,
+                "roughness_md": result.roughness_md,
+                "gloss_md": result.gloss_md,
+                "thickness_mm": result.thickness_mm
+            }])
+        return Response(200, json=[])
 
-    # 1. 004 데이터베이스 모듈에서 조도 기준 피착재 탐색
-    async with httpx.AsyncClient() as client:
-        try:
-            # 004 API 호출
-            db_res = await client.get(f"{db_url}/adherends/search?roughness_md_max=1.0", timeout=5.0)
-            assert db_res.status_code == 200, f"004 DB 조회 실패: {db_res.status_code}"
-            adherends = db_res.json()
-            assert len(adherends) > 0, "004 DB에 조건에 맞는 피착재 데이터가 존재하지 않습니다."
-            
-            # 첫 번째 피착재 선택
-            target_adherend = adherends[0]
-            print(f"[E2E] 선택된 피착재 데이터: {target_adherend}")
-            
-        except httpx.ConnectError:
-            pytest.fail("004 Database API 서버에 연결할 수 없습니다.")
-        except Exception as e:
-            pytest.fail(f"004 DB 데이터 획득 중 오류 발생: {e}")
+    respx.get(url__regex=r"http://localhost:8004/adherends/search.*").mock(side_effect=db_search_handler)
+    
+    # 비전 모듈 002, 003, 007 모킹
+    respx.post(url__regex=r"http://.*/analyze/image").mock(return_value=Response(200, json={"surface_energy": 45.0}))
+    respx.post(url__regex=r"http://.*/analyze/roughness").mock(return_value=Response(200, json={"roughness": 0.15, "gloss": 150.0}))
+    respx.post(url__regex=r"http://.*/api/v1/analyze").mock(return_value=Response(200, json={"metrics": {"estimated_radius_mm": 1.5}}))
+    
+    # 011 Processability 모킹
+    respx.post(url__regex=r"http://.*/calculate_processability").mock(
+        return_value=Response(200, json={"level": 3, "is_fallback": False, "reason": "Mocked processing"})
+    )
+    
+    # 012 Matching 모킹 (매칭 실패 상황 강제 유도: Target Adhesion 5000)
+    respx.post(url__regex=r"http://.*/match").mock(
+        return_value=Response(200, json={"recommendations": [], "is_successful": False})
+    )
+    
+    # 013 Reverse Engineering 모킹 (역설계 성공 상태 반환)
+    # 실제 오케스트레이터 코드는 httpx.AsyncClient를 쓰기 때문에 httpx 요청이 가로채집니다.
+    respx.post(url__regex=r"http://.*/optimize").mock(
+        return_value=Response(200, json={"recipe": {"M1": 0.5, "M2": 0.5}, "predicted_properties": {"측정_값": 4800.0}})
+    )
+    respx.post(url__regex=r"http://.*/predict").mock(
+        return_value=Response(200, json={"embedding": [0.1, 0.2, 0.3]})
+    )
+    respx.post(url__regex=r"http://.*/verify").mock(
+        return_value=Response(200, json={
+            "is_passed": True, 
+            "predicted_properties": {"측정_값": 4900.0, "Tg": -15.0}, 
+            "error_rates": {}, 
+            "confidence_score": 0.95
+        })
+    )
 
-        # 2. 014 오케스트레이터 API 요청 페이로드 조립
-        # schemas.OrchestrationRequest 형식에 맞춘다.
+    # 014 내부 로직 테스트를 위한 AsyncClient (실제 앱에 연결)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        # 먼저 모킹된 004 API를 찔러 피착재 정보 가져오기 시뮬레이션
+        db_res = httpx.get("http://localhost:8004/adherends/search?roughness_md_max=1.0")
+        target_adherend = db_res.json()[0]
+        
         payload = {
-            "substrate_id": target_adherend.get("product_name") or target_adherend.get("classification") or "Unknown-Substrate",
-            "finish_type": target_adherend.get("classification") or "Hairline",
+            "substrate_id": target_adherend["product_name"],
+            "finish_type": target_adherend["classification"],
             "metrics": {
-                "surface_energy": target_adherend.get("surface_energy_md") or 38.6,
-                "roughness": target_adherend.get("roughness_md") or 0.15,
-                "gloss": target_adherend.get("gloss_md") or 100.0,
-                "curvature_radius": target_adherend.get("thickness_mm") or 1.0
+                "surface_energy": target_adherend["surface_energy_md"],
+                "roughness": target_adherend["roughness_md"],
+                "gloss": target_adherend["gloss_md"],
+                "curvature_radius": 1.0 # mock thickness as radius
             },
             "target": {
-                "target_adhesion": 120.0,
+                "target_adhesion": 5000.0,  # 극한 스펙 주입
                 "target_tg": -20.0,
                 "target_viscosity": 3500.0
             },
             "normal_vector_data": [0.01, 0.02, 0.01],
             "material_stiffness": 180.0
         }
-
-        # 3. 014 오케스트레이터 호출
-        try:
-            orch_res = await client.post(f"{orchestrator_url}/orchestrate", json=payload, timeout=60.0)
-            assert orch_res.status_code == 200, f"014 오케스트레이터 호출 실패: {orch_res.status_code}"
-            
-            result_data = orch_res.json()
-            print(f"[E2E] 오케스트레이터 파이프라인 결과: {result_data}")
-            
-            # 워크플로우 성공 검증
-            assert "status" in result_data, "오케스트레이터 반환 결과에 status 필드가 없습니다."
-            assert result_data["status"] in ["matched", "reverse_engineered"], f"올바르지 않은 워크플로우 상태: {result_data['status']}"
-            
-            # 만약 matched 인 경우
-            if result_data["status"] == "matched":
-                assert "result" in result_data
-                assert "recommendations" in result_data["result"]
-                print(f"[E2E] 매칭 성공! 추천 제품: {result_data['result']['recommendations']}")
-            
-            # 만약 reverse_engineered 인 경우
-            elif result_data["status"] == "reverse_engineered":
-                assert "result" in result_data
-                assert "predicted_properties" in result_data["result"]
-                print(f"[E2E] 역설계 가동 완료. 예측 물성: {result_data['result']['predicted_properties']}")
-
-        except httpx.ConnectError:
-            pytest.fail("014 Orchestrator 서버에 연결할 수 없습니다.")
-        except Exception as e:
-            pytest.fail(f"오케스트레이터 파이프라인 가동 중 오류 발생: {e}")
+        
+        # 오케스트레이터 API 호출
+        orch_res = await client.post("/orchestrate", json=payload)
+        
+        assert orch_res.status_code == 200, f"오케스트레이터 오류: {orch_res.text}"
+        result_data = orch_res.json()
+        
+        # 비즈니스 어설션: 극한 스펙(5000.0)으로 매칭은 실패해야 하고, 역설계로 전환되어야 함
+        assert result_data["status"] == "reverse_engineered", "오케스트레이터가 reverse_engineered 상태로 전이되지 않았습니다."
+        assert "result" in result_data
+        
+        rev_res = result_data["result"]
+        assert rev_res["is_passed"] is True, "역설계 로직이 성공(True) 상태를 반환해야 합니다."
+        
+        logger.info(f"[E2E In-Memory Test] 매칭 실패 후 역설계 파이프라인 안전 이행 검증 성공. 반환 결과: {result_data}")

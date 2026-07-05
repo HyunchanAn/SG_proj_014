@@ -24,6 +24,9 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.4.0",
     "pytest-asyncio",
+    "respx",
+    "pytest-mock",
+    "sqlalchemy",
 ]
 
 [tool.ruff]
