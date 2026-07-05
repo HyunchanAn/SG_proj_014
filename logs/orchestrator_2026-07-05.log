@@ -1,0 +1,2 @@
+2026-07-05 13:12:40.441 | WARNING  | src.main:validation_exception_handler:39 - API Validation Error on /orchestrate: [{'location': 'body -> 1', 'message': 'JSON decode error'}]
+2026-07-05 13:23:37.903 | WARNING  | src.main:validation_exception_handler:39 - API Validation Error on /orchestrate: [{'location': 'body -> metrics -> surface_energy', 'message': 'Value error, 물방울 접촉각 인식 이상 또는 물리 화학적 SFE 타당 한계치 초과 (허용치: 10.0 ~ 100.0 mN/m)'}]

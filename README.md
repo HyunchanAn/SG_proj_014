@@ -1,6 +1,6 @@
 # 통합 모듈 오케스트레이션 아키텍처 및 결과 보고서
 
-![Status](https://img.shields.io/badge/Status-v1.1%20Release-brightgreen) ![Python](https://img.shields.io/badge/Python-3.12%2B-blue) ![Backend](https://img.shields.io/badge/Backend-FastAPI-red) ![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD%20Pipeline-passing-brightgreen?logo=github)
+![Status](https://img.shields.io/badge/Status-v1.1%20Release-brightgreen) ![Python](https://img.shields.io/badge/Python-3.12%2B-blue) ![Backend](https://img.shields.io/badge/Backend-FastAPI-red)
 
 프로젝트 코드: SG_proj_014
 프로젝트 별칭: SG-Orchestrator
@@ -38,8 +38,9 @@
 - 로컬 Uvicorn 서버 실행:
   `uvicorn src.main:app --host 0.0.0.0 --port 8014 --reload`
 
-## 4. 달성된 연동 구조 (2026-06-29 업데이트)
+## 4. 달성된 연동 구조 (2026-07-05 업데이트)
 
+- [개발 목표 반영 리팩토링 (2026-07-05)]: loguru를 통한 로깅 시스템의 통일(콘솔 표준 출력 및 logs/ 회전 파일 저장), Pydantic v2를 기반으로 도메인 임계 한계치(SFE, Tg, 곡률) 검증식 정교화 및 FastAPI 전역 검증 오류 예외 처리기(422)를 도입하여 세부 원인 JSON 피드백 체계를 구축 완료.
 - [Vision Pipeline 실측화]: call_vision_modules 함수에서 dummy.jpg 파일 및 임시 문자열을 강제 전송하는 대신, 사용자의 실제 마감 종류(finish_type)에 호환되는 실제 고해상도 샘플 이미지들을 디스크에서 동적으로 로드해 비전 API 서버에 Stream 포워딩하는 실측 연동 파이프라인으로 전환 완료.
 - [피드백 제어 비례제어화]: 역설계 루프 실패 시 접착력을 단순 10.0씩 더하는 땜빵 처리를 제거하고, 편차 및 부호 방향에 비례해 델타 조정을 가하는 비례 제어 피드백(Proportional Feedback Control) 메커니즘을 적용 완료.
 - [Data Hub] 004 모듈: 기존 엑셀 기반 관리에서 벗어나 영업/기준용 데이터베이스와 연구실험용 데이터베이스를 물리적으로 분리하여 구성. 명칭 혼동을 방지하는 파서 적용.

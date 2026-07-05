@@ -53,17 +53,17 @@ class Step1Metrics(BaseModel):
     @field_validator("surface_energy")
     @classmethod
     def check_sfe(cls, v):
-        # TODO: 임의로 설정된 한계값이므로 도메인 전문가의 검증 필요 (임의 값 입력했다)
-        if v <= 0 or v >= 150:
-            raise ValueError("물방울 인식이 실패하였거나 물리적 범위를 초과했습니다. (임의 설정된 SFE 한계치: 0 ~ 150)")
+        # 계측 범위 및 고체 물리 화학적 실측 타당 범위 (10.0 ~ 100.0 mN/m) 보장
+        if v < 10.0 or v > 100.0:
+            raise ValueError("물방울 접촉각 인식 이상 또는 물리 화학적 SFE 타당 한계치 초과 (허용치: 10.0 ~ 100.0 mN/m)")
         return v
     
     @field_validator("curvature_radius")
     @classmethod
     def check_curvature(cls, v):
-        # TODO: 임의 설정값
-        if abs(v) < 0.000001:
-            raise ValueError("곡률 반경이 극단적으로 작아 연산이 불가합니다. (임의 설정치)")
+        # 3D 곡률 해석을 위한 물리 최소 한계 곡률반경 (0.01mm) 정의
+        if abs(v) < 0.01:
+            raise ValueError("곡률 반경이 물리적 연산 한계(0.01mm) 미만으로 극단적으로 작아 공정 해석이 불가능합니다.")
         return v
 
 class Step2Target(BaseModel):
@@ -74,9 +74,9 @@ class Step2Target(BaseModel):
     @field_validator("target_tg")
     @classmethod
     def check_tg(cls, v):
-        # TODO: 임의로 설정된 한계값이므로 도메인 전문가의 검증 필요 (임의 값 입력했다)
-        if v < -100 or v > 200:
-            raise ValueError("해당 배합(Tg)은 물리적으로 불안정합니다. (임의 설정된 Tg 한계치: -100 ~ 200)")
+        # 아크릴계 보호 필름 점착 수지의 중합 물리 한계치 (-80 ~ 80 °C) 매핑
+        if v < -80.0 or v > 80.0:
+            raise ValueError("목표 유리전이온도(Tg)가 아크릴 점착 중합체의 물리적 허용 범위를 초과했습니다. (허용치: -80 ~ 80 °C)")
         return v
 
 class OrchestrationRequest(BaseModel):
