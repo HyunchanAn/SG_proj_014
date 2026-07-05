@@ -118,3 +118,14 @@ Date: 2026-07-05 14:00 (추가 E2E 핫픽스 검증)
 [2026-07-05 16:50:00] [Hyunchan An]
 - 3순위: GPU-Accelerated Containerization. docker-compose.yml에 deploy.resources.reservations.devices 추가 완료.
 - 4순위: Async Robustness. orchestrator.py 구조적 예외 처리 및 Task ID/PID 매핑 중앙 집중형 로깅 구현 완료.
+
+[2026-07-05 21:35:58]
+[작업 요약] Step 3 역설계 파이프라인 연동 규격 고도화 및 검증
+[상세 내용]
+1. src/orchestrator.py 연동 인터페이스 개편
+   - MONOMER_SMILES 정적 맵 테이블 도입: 001 배합 처방 모노머명(BA, 2-EHA, EA, MMA, AA, 2-HEMA, St, VAc)을 009용 SMILES 구조 리스트로 동적 변환
+   - 009의 스펙트럼 출력인 transmittance 데이터를 013의 ir_gnn_features 입력 특징량으로 매핑하여 FTIR 파형 정보 전달
+   - 009 호출 시 polymerized/cured state 모사를 위해 n=10 고정 수송 설정 적용 (009 내부 n=10 polymer 매핑 거동 검증 결과에 부합)
+2. cross_module_tests 및 unit tests 검증
+   - 변경된 009 API 페이로드에 맞춰 cross_module_tests/test_e2e_pipeline.py 내 respx Mock 응답 구조 수정
+   - 로컬 pytest 검증 결과 6개 전체 테스트 케이스 100% 통과 완료
