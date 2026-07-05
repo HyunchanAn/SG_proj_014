@@ -241,40 +241,60 @@ def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationReques
         req.metrics.surface_energy = corrected_sfe
     return req
 
+import uuid
+
 async def orchestrate_workflow(req: OrchestrationRequest):
-    # Step 0: Vision Modules (002, 003, 007)
-    # Decoupled vision processing: passes actual finish type to select correct validation image
-    vision_data = await call_vision_modules(req.finish_type)
-    
-    # Update request metrics with vision findings functionally
-    if "curvature_radius" in vision_data:
-        req.metrics.curvature_radius = vision_data["curvature_radius"]
-    if "roughness" in vision_data:
-        req.metrics.roughness = vision_data["roughness"]
-    if "gloss" in vision_data:
-        req.metrics.gloss = vision_data["gloss"]
+    task_id = str(uuid.uuid4())[:8]
+    pid = os.getpid()
+    # Using loguru contextual logging
+    with logger.contextualize(task_id=task_id, pid=pid):
+        logger.info(f"[Task {task_id} | PID {pid}] Starting orchestration workflow for {req.substrate_id} ({req.finish_type})")
+        
+        try:
+            # Step 0: Vision Modules (002, 003, 007)
+            vision_data = await call_vision_modules(req.finish_type)
+            
+            if "curvature_radius" in vision_data:
+                req.metrics.curvature_radius = vision_data["curvature_radius"]
+            if "roughness" in vision_data:
+                req.metrics.roughness = vision_data["roughness"]
+            if "gloss" in vision_data:
+                req.metrics.gloss = vision_data["gloss"]
 
-    # Apply physical and visual soft correction rules before processing
-    req = apply_physical_corrections(req)
+            req = apply_physical_corrections(req)
 
-    # Step 1: Processability (011)
-    proc_result = await call_module_011_processability(req)
-    
-    # Step 2: Matching (012)
-    match_result = await call_module_012_matching(req, proc_result.level)
-    
-    # Step 3: Reverse Engineering (013) - Always run for cross-comparison & recipe analysis
-    rev_result = await call_module_013_reverse_engineering(req)
-    
-    if not match_result.is_successful:
-        return {"status": "reverse_engineered", "result": rev_result}
-    
-    # Return both matched product and reverse engineered formula if successful
-    return {
-        "status": "matched", 
-        "result": match_result,
-        "reverse_engineered_result": rev_result
-    }
-
-
+            # Step 1: Processability (011)
+            proc_result = await call_module_011_processability(req)
+            
+            # Step 2: Matching (012)
+            match_result = await call_module_012_matching(req, proc_result.level)
+            
+            # Step 3: Reverse Engineering (013)
+            rev_result = await call_module_013_reverse_engineering(req)
+            
+            if not match_result.is_successful:
+                logger.info(f"[Task {task_id}] Matching failed. Falling back to Reverse Engineered status.")
+                return {"status": "reverse_engineered", "result": rev_result}
+            
+            logger.info(f"[Task {task_id}] Orchestration successful.")
+            return {
+                "status": "matched", 
+                "result": match_result,
+                "reverse_engineered_result": rev_result
+            }
+        
+        except asyncio.TimeoutError as te:
+            logger.error(f"[Task {task_id} | PID {pid}] Operation timed out during orchestration: {str(te)}")
+            return {"status": "error", "error": "Operation Timeout", "details": str(te)}
+        
+        except RuntimeError as re:
+            logger.error(f"[Task {task_id} | PID {pid}] Remote module execution failed: {str(re)}")
+            return {"status": "error", "error": "Module Execution Failed", "details": str(re)}
+        
+        except Exception as e:
+            logger.exception(f"[Task {task_id} | PID {pid}] Unhandled system error during orchestration: {str(e)}")
+            return {"status": "error", "error": "Internal System Error", "details": str(e)}
+        
+        finally:
+            logger.info(f"[Task {task_id} | PID {pid}] Orchestration workflow execution finished.")
 
