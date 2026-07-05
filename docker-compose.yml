@@ -1,77 +1,141 @@
 version: '3.8'
-
 services:
-  # Data Hub
   sg_proj_004:
     build: ../SG_proj_004
     ports:
-      - "8004:8000"
+    - 8004:8000
     restart: unless-stopped
-
-  # Vision Modules (Step 1)
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_002:
     build: ../SG_proj_002
     ports:
-      - "8002:8000"
+    - 8002:8000
     restart: unless-stopped
-  
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_003:
     build: ../SG_proj_003
     ports:
-      - "8003:8000"
+    - 8003:8000
     restart: unless-stopped
-
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_007:
     build: ../SG_proj_007
     ports:
-      - "8007:8000"
+    - 8007:8000
     restart: unless-stopped
-
-  # Decisions & Machinability (Step 2)
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_011:
     build: ../SG_proj_011
     ports:
-      - "8011:8000"
+    - 8011:8000
     restart: unless-stopped
-
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_012:
     build: ../SG_proj_012
     ports:
-      - "8012:8000"
+    - 8012:8000
     restart: unless-stopped
-
-  # Polymer Prediction & Simulation (Step 3)
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_001:
     build: ../SG_proj_001
     ports:
-      - "8001:8001"
+    - 8001:8001
     restart: unless-stopped
-
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_009:
     build: ../SG_proj_009
     ports:
-      - "8009:8009"
+    - 8009:8009
     restart: unless-stopped
-
-  # Reverse Engineering (Step 3)
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_013:
     build: ../SG_proj_013
     ports:
-      - "8013:8000"
+    - 8013:8000
     restart: unless-stopped
-
-  # Master Orchestrator
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
   sg_proj_014:
     build: .
     ports:
-      - "8014:8000"
+    - 8014:8000
     restart: unless-stopped
     environment:
-      - MODULE_001_URL=http://sg_proj_001:8001
-      - MODULE_002_URL=http://sg_proj_002:8000
-      - MODULE_003_URL=http://sg_proj_003:8000
-      - MODULE_007_URL=http://sg_proj_007:8000
-      - MODULE_009_URL=http://sg_proj_009:8009
-      - MODULE_011_URL=http://sg_proj_011:8000
-      - MODULE_012_URL=http://sg_proj_012:8000
-      - MODULE_013_URL=http://sg_proj_013:8000
+    - MODULE_001_URL=http://sg_proj_001:8001
+    - MODULE_002_URL=http://sg_proj_002:8000
+    - MODULE_003_URL=http://sg_proj_003:8000
+    - MODULE_007_URL=http://sg_proj_007:8000
+    - MODULE_009_URL=http://sg_proj_009:8009
+    - MODULE_011_URL=http://sg_proj_011:8000
+    - MODULE_012_URL=http://sg_proj_012:8000
+    - MODULE_013_URL=http://sg_proj_013:8000
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
