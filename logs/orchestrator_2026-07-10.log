@@ -1,0 +1,1 @@
+2026-07-10 00:09:53.125 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
