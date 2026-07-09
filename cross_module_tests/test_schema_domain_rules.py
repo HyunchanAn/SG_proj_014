@@ -63,3 +63,10 @@ def test_orchestration_request_creation():
     )
     assert req.substrate_series == "SGV"
     assert req.thickness_um == 100.0
+
+def test_rdkit_smiles_validity():
+    from rdkit import Chem
+    # Valid smiles
+    assert Chem.MolFromSmiles("C=CC(=O)O") is not None
+    # Invalid smiles
+    assert Chem.MolFromSmiles("InvalidSmilesString!!!") is None
