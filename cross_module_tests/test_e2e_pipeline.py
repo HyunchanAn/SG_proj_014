@@ -147,3 +147,78 @@ async def test_full_pipeline_e2e_in_memory(in_memory_db):
         assert rev_res["is_passed"] is True, "역설계 로직이 성공(True) 상태를 반환해야 합니다."
         
         logger.info(f"[E2E In-Memory Test] 매칭 실패 후 역설계 파이프라인 안전 이행 검증 성공. 반환 결과: {result_data}")
+
+@pytest.mark.anyio
+@respx.mock
+async def test_full_pipeline_e2e_invalid_smiles_error(in_memory_db):
+    """
+    E2E failure path test:
+    When the 001 optimizer returns a recipe containing an invalid SMILES monomer,
+    the orchestrator should catch the ValueError from monomer_mapper, log the failure,
+    and return status 'error' with RDKit valence/parsing detail.
+    """
+    # 004 DB Mocking
+    def db_search_handler(request):
+        result = in_memory_db.query(Adherend).first()
+        if result:
+            return Response(200, json=[{
+                "product_name": result.product_name,
+                "classification": result.classification,
+                "surface_energy_md": result.surface_energy_md,
+                "roughness_md": result.roughness_md,
+                "gloss_md": result.gloss_md,
+                "thickness_mm": result.thickness_mm
+            }])
+        return Response(200, json=[])
+
+    respx.get(url__regex=r"http://localhost:8004/adherends/search.*").mock(side_effect=db_search_handler)
+
+    # Mock other services
+    respx.post(url__regex=r"http://.*/analyze/image").mock(return_value=Response(200, json={"surface_energy": 45.0}))
+    respx.post(url__regex=r"http://.*/analyze/roughness").mock(return_value=Response(200, json={"roughness": 0.15, "gloss": 150.0}))
+    respx.post(url__regex=r"http://.*/api/v1/analyze").mock(return_value=Response(200, json={"metrics": {"estimated_radius_mm": 1.5}}))
+    respx.post(url__regex=r"http://.*/calculate_processability").mock(
+        return_value=Response(200, json={"level": 3, "is_fallback": False, "reason": "Mocked processing"})
+    )
+    respx.post(url__regex=r"http://.*/match").mock(
+        return_value=Response(200, json={"recommendations": [], "is_successful": False})
+    )
+
+    # 001 returns a recipe with UNKNOWN monomer to trigger mapping error
+    respx.post(url__regex=r"http://.*/optimize").mock(
+        return_value=Response(200, json={"recipe": {"UNKNOWN_MONOMER": 0.5}, "predicted_properties": {"측정_값": 4800.0}})
+    )
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        db_res = httpx.get("http://localhost:8004/adherends/search?roughness_md_max=1.0")
+        target_adherend = db_res.json()[0]
+
+        payload = {
+            "substrate_id": target_adherend["product_name"],
+            "substrate_series": "SGV",
+            "thickness_um": 100.0,
+            "finish_type": target_adherend["classification"],
+            "metrics": {
+                "surface_energy": target_adherend["surface_energy_md"],
+                "roughness": target_adherend["roughness_md"],
+                "gloss": target_adherend["gloss_md"],
+                "curvature_radius": 1.0
+            },
+            "target": {
+                "target_initial_adhesion": 5000.0,
+                "target_aged_adhesion": 5500.0,
+                "target_tg": -20.0,
+                "target_viscosity": 3500.0
+            },
+            "normal_vector_data": [0.01, 0.02, 0.01],
+            "material_stiffness": 180.0
+        }
+
+        orch_res = await client.post("/orchestrate", json=payload)
+        assert orch_res.status_code == 200
+        result_data = orch_res.json()
+
+        assert result_data["status"] == "error"
+        assert result_data["error"] == "Module Execution Failed"
+        assert "Monomer mapping not found for abbreviation" in result_data["details"]

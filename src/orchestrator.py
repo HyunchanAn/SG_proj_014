@@ -8,17 +8,7 @@ from src.schemas import (
 import asyncio
 from src.config import config
 
-# Core monomer to SMILES mapping for SG_proj_009 integration
-MONOMER_SMILES = {
-    "BA": "CCCCOC(=O)C=C",
-    "2-EHA": "CCCCC(CC)COC(=O)C=C",
-    "EA": "CCOC(=O)C=C",
-    "MMA": "CC(=C)C(=O)OC",
-    "AA": "C=CC(=O)O",
-    "2-HEMA": "CC(=C)C(=O)OCCO",
-    "St": "C=CC1=CC=CC=C1",
-    "VAc": "CC(=O)OC=C"
-}
+from src.utils import monomer_mapper
 
 MODULE_011_URL = config.MODULE_011_URL
 MODULE_012_URL = config.MODULE_012_URL
@@ -33,7 +23,7 @@ async def call_vision_modules(finish_type: str = "Hairline") -> dict:
     logger.info(f"Calling vision modules 002, 003, 007 concurrently with actual sample images for finish_type: {finish_type}")
     
     # Map finish type to real corporate sample images
-    sample_dir = Path("E:/Github/SG_proj_015")
+    sample_dir = Path("E:/Github/SG_proj_015/reports_archive/images")
     prefix = "HL"
     if finish_type in ["Mirror", "BA"]:
         prefix = "BA"
@@ -189,22 +179,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     
                 # 2. Call 009 (IR GNN) to predict IR features based on the recipe
                 logger.info(f"Calling 009 IR GNN API: {config.MODULE_009_URL}/predict")
-                components = []
-                from rdkit import Chem
-                for monomer, ratio in best_recipe.items():
-                    smiles = MONOMER_SMILES.get(monomer, "C=CC(=O)O") # Fallback to Acrylic Acid
-                    
-                    # RDKit Chemical Validity Check for Reverse Engineering Results
-                    mol = Chem.MolFromSmiles(smiles)
-                    if mol is None:
-                        logger.error(f"014 Orchestrator: Invalid SMILES detected for monomer {monomer}: {smiles}")
-                        raise ValueError(f"Invalid chemical SMILES structure for monomer {monomer}: {smiles}")
-                        
-                    components.append({
-                        "smiles": smiles,
-                        "ratio": float(ratio),
-                        "n": 10  # represent polymerized/cured state
-                    })
+                components = monomer_mapper.convert_recipe_to_components(best_recipe, config.N_POLYMERIZATION)
                 
                 res_009 = await client.post(
                     f"{config.MODULE_009_URL}/predict",
@@ -216,7 +191,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                 )
                 if res_009.status_code == 200:
                     data_009 = res_009.json()
-                    ir_gnn_features = data_009.get("transmittance", [0.0, 0.0, 0.0]) # Pass predicted transmittance spectrum
+                    ir_gnn_features = monomer_mapper.extract_gnn_features(data_009)
                     
                 # 3. Call 013 (QA Gateway) to verify
                 payload = {

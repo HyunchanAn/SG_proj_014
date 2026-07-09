@@ -1,3 +1,26 @@
 2026-07-10 00:09:53.125 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
 2026-07-10 00:22:48.586 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
 2026-07-10 00:22:56.224 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-10 00:53:31.128 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'M1'
+2026-07-10 00:53:31.128 | ERROR    | src.orchestrator:call_module_013_reverse_engineering:233 - AI Loop error: Monomer mapping not found for abbreviation: 'M1'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-10 00:53:31.129 | ERROR    | src.orchestrator:orchestrate_workflow:307 - [Task 726fb661 | PID 34508] Remote module execution failed: Reverse Engineering Failed: Monomer mapping not found for abbreviation: 'M1'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-10 00:53:31.231 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-10 00:53:38.580 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-10 00:53:47.829 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-10 00:53:47.831 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
+2026-07-10 00:53:47.832 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'BAD_SYNTAX': 'Invalid_SMILES_String'
+2026-07-10 00:53:47.832 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'VALENCE_ERR': 'C(=O)(=O)(=O)O'
+2026-07-10 00:54:08.879 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
+2026-07-10 00:54:08.880 | ERROR    | src.orchestrator:call_module_013_reverse_engineering:233 - AI Loop error: Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-10 00:54:08.880 | ERROR    | src.orchestrator:orchestrate_workflow:307 - [Task e2678d1e | PID 30372] Remote module execution failed: Reverse Engineering Failed: Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-10 00:54:08.882 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-10 00:54:08.884 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
+2026-07-10 00:54:08.884 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'BAD_SYNTAX': 'Invalid_SMILES_String'
+2026-07-10 00:54:08.885 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'VALENCE_ERR': 'C(=O)(=O)(=O)O'
+2026-07-10 00:54:38.676 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
+2026-07-10 00:54:38.676 | ERROR    | src.orchestrator:call_module_013_reverse_engineering:233 - AI Loop error: Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-10 00:54:38.676 | ERROR    | src.orchestrator:orchestrate_workflow:307 - [Task e95b5648 | PID 27772] Remote module execution failed: Reverse Engineering Failed: Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-10 00:54:38.678 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-10 00:54:38.680 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
+2026-07-10 00:54:38.681 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'BAD_SYNTAX': 'Invalid_SMILES_String'
+2026-07-10 00:54:38.681 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'VALENCE_ERR': 'C(=O)(=O)(=O)O'
