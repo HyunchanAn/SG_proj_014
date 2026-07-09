@@ -15,6 +15,7 @@ dependencies = [
     "python-dotenv",
     "httpx",
     "loguru>=0.7.0",
+    "rdkit",
 ]
 
 [project.optional-dependencies]
