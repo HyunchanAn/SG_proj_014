@@ -70,3 +70,34 @@ def test_rdkit_smiles_validity():
     assert Chem.MolFromSmiles("C=CC(=O)O") is not None
     # Invalid smiles
     assert Chem.MolFromSmiles("InvalidSmilesString!!!") is None
+
+def test_monomer_mapper_validation_failures():
+    from src.utils import monomer_mapper
+    import pytest
+
+    # 1. Test missing monomer in mapping json
+    with pytest.raises(ValueError) as exc_info:
+        monomer_mapper.convert_recipe_to_components({"UNKNOWN_MONOMER": 0.5}, 10)
+    assert "Monomer mapping not found for abbreviation" in str(exc_info.value)
+
+    # 2. Test invalid SMILES syntax
+    # Temporarily insert an invalid mapping to mapping dictionary to trigger parse error
+    monomer_mapper.MONOMER_SMILES_MAP["BAD_SYNTAX"] = "Invalid_SMILES_String"
+    try:
+        with pytest.raises(ValueError) as exc_info:
+            monomer_mapper.convert_recipe_to_components({"BAD_SYNTAX": 0.5}, 10)
+        assert "Invalid SMILES for monomer" in str(exc_info.value)
+        assert "could not parse the molecule" in str(exc_info.value)
+    finally:
+        del monomer_mapper.MONOMER_SMILES_MAP["BAD_SYNTAX"]
+
+    # 3. Test valence error (chemical valence violation: 5-valent carbon)
+    # RDKit MolFromSmiles will fail sanitization and return None for C(=O)(=O)(=O)O
+    monomer_mapper.MONOMER_SMILES_MAP["VALENCE_ERR"] = "C(=O)(=O)(=O)O"
+    try:
+        with pytest.raises(ValueError) as exc_info:
+            monomer_mapper.convert_recipe_to_components({"VALENCE_ERR": 0.5}, 10)
+        assert "Invalid SMILES for monomer" in str(exc_info.value)
+        assert "valence errors" in str(exc_info.value)
+    finally:
+        del monomer_mapper.MONOMER_SMILES_MAP["VALENCE_ERR"]

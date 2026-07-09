@@ -141,3 +141,16 @@ CI/CD 안정화: 테스트 내 모킹 시그니처 오류 수정, python-dotenv 
    - 유효하지 않은 화학 구조 감지 시, ValueError를 발생시키고 AI Loop 예외 핸들링을 통해 정제된 실패 응답으로 안전하게 통제되도록 구현
 2. cross_module_tests/test_schema_domain_rules.py 내 RDKit 검증 테스트 케이스 추가
    - test_rdkit_smiles_validity 유닛 테스트 케이스를 신설하여 RDKit 분자 파싱 동작 무결성 및 CI/CD 빌드 연동 검증 (7/7 passed)
+
+## [2026-07-10 01:09:01]
+[작업 요약] 리뷰어G 피드백 정제 반영: 매핑 외부화, 책임 분리, 이미지 경로 교정 및 테스트 강화
+[상세 내용]
+1. 단량체 매핑 테이블 외부 JSON 파일 분리 및 이관
+   - 하드코딩된 모노머-SMILES 매핑을 src/data/monomer_mapping.json 파일로 격리하여 001-009 간 단일 진실 공급원(SSOT) 구축
+2. 오케스트레이터 책임 분리 리팩토링
+   - src/utils/monomer_mapper.py 모듈을 신설하여 SMILES 구조 변환, RDKit 기반 화학적 타당성(원자가 오류 포함) 검증, GNN transmittance 피처 추출 책임을 위임
+   - src/config.py 내에 중합 스케일 인자인 N_POLYMERIZATION = 10 상수를 물리적 주석과 함께 선언하여 orchestrator.py는 순수 조율(Orchestration) 책임만 갖도록 슬림화
+3. 실측 이미지 바인딩 경로 버그 교정
+   - call_vision_modules() 내부 실측 표면 샘플 이미지 탐색 경로를 E:/Github/SG_proj_015/reports_archive/images로 올바르게 수정하여 E2E 시 실 이미지 연동을 정상화
+4. 테스트 세트 대폭 강화
+   - 존재하지 않는 모노머, RDKit 문법 오류 분자, 원자가(Valence) 위반 화학식에 대한 차단 검증 단위 테스트 및 E2E 실패 경로 Mock 통합 테스트를 추가하여 9/9 passed 빌드 통과
