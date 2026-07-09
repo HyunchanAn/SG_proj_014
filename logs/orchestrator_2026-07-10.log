@@ -24,3 +24,6 @@
 2026-07-10 00:54:38.680 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
 2026-07-10 00:54:38.681 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'BAD_SYNTAX': 'Invalid_SMILES_String'
 2026-07-10 00:54:38.681 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'VALENCE_ERR': 'C(=O)(=O)(=O)O'
+2026-07-10 01:14:42.696 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
+2026-07-10 01:14:42.696 | ERROR    | src.orchestrator:call_module_013_reverse_engineering:233 - AI Loop error: Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-10 01:14:42.696 | ERROR    | src.orchestrator:orchestrate_workflow:307 - [Task 89a21cec | PID 23256] Remote module execution failed: Reverse Engineering Failed: Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'. Please update 'monomer_mapping.json' with a valid SMILES definition.
