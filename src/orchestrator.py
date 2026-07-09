@@ -32,7 +32,7 @@ async def call_vision_modules(finish_type: str = "Hairline") -> dict:
         
     sfe_path = sample_dir / f"{prefix}_water_verify_step1_coin.jpg"
     vsams_path = sample_dir / f"{prefix}_reflect_verify_finish.jpg"
-    terra_path = sample_dir / f"{prefix}_3d_verify_depth.jpg"
+    terra_path = sample_dir / "example_01.jpg"
     
     # Fallback to any available image if path mismatch
     if not sfe_path.exists():
