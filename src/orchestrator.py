@@ -23,24 +23,24 @@ async def call_vision_modules(finish_type: str = "Hairline") -> dict:
     logger.info(f"Calling vision modules 002, 003, 007 concurrently with actual sample images for finish_type: {finish_type}")
     
     # Map finish type to real corporate sample images
-    sample_dir = Path("E:/Github/SG_proj_015/reports_archive/images")
+    sample_dir = Path("E:/Github/SG_proj_015/260521 test_image (droplet)")
     prefix = "HL"
     if finish_type in ["Mirror", "BA"]:
         prefix = "BA"
     elif finish_type in ["2B", "2D"]:
         prefix = "2B"
         
-    sfe_path = sample_dir / f"{prefix}_water_verify_step1_coin.jpg"
-    vsams_path = sample_dir / f"{prefix}_reflect_verify_finish.jpg"
+    sfe_path = sample_dir / prefix / f"{prefix}_water.jpg"
+    vsams_path = sample_dir / prefix / f"{prefix}_reflect.jpg"
+    # Using example_01.jpg exclusively as the 3D depth map base image per user request
     terra_path = sample_dir / "example_01.jpg"
     
     # Fallback to any available image if path mismatch
     if not sfe_path.exists():
-        img_files = list(sample_dir.glob("*.jpg"))
+        img_files = list(sample_dir.glob("*/*.jpg"))
         if img_files:
             sfe_path = img_files[0]
             vsams_path = img_files[0]
-            terra_path = img_files[0]
             
     sfe_data = b""
     vsams_base64 = ""
