@@ -190,8 +190,16 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                 # 2. Call 009 (IR GNN) to predict IR features based on the recipe
                 logger.info(f"Calling 009 IR GNN API: {config.MODULE_009_URL}/predict")
                 components = []
+                from rdkit import Chem
                 for monomer, ratio in best_recipe.items():
                     smiles = MONOMER_SMILES.get(monomer, "C=CC(=O)O") # Fallback to Acrylic Acid
+                    
+                    # RDKit Chemical Validity Check for Reverse Engineering Results
+                    mol = Chem.MolFromSmiles(smiles)
+                    if mol is None:
+                        logger.error(f"014 Orchestrator: Invalid SMILES detected for monomer {monomer}: {smiles}")
+                        raise ValueError(f"Invalid chemical SMILES structure for monomer {monomer}: {smiles}")
+                        
                     components.append({
                         "smiles": smiles,
                         "ratio": float(ratio),
