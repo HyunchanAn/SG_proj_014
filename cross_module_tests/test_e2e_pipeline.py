@@ -67,7 +67,8 @@ async def test_full_pipeline_e2e_in_memory(in_memory_db):
                 "surface_energy_md": result.surface_energy_md,
                 "roughness_md": result.roughness_md,
                 "gloss_md": result.gloss_md,
-                "thickness_mm": result.thickness_mm
+                "thickness_mm": result.thickness_mm,
+                "stocks": []
             }])
         return Response(200, json=[])
 
@@ -167,7 +168,8 @@ async def test_full_pipeline_e2e_invalid_smiles_error(in_memory_db):
                 "surface_energy_md": result.surface_energy_md,
                 "roughness_md": result.roughness_md,
                 "gloss_md": result.gloss_md,
-                "thickness_mm": result.thickness_mm
+                "thickness_mm": result.thickness_mm,
+                "stocks": []
             }])
         return Response(200, json=[])
 
