@@ -193,6 +193,38 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     data_009 = res_009.json()
                     ir_gnn_features = monomer_mapper.extract_gnn_features(data_009)
                     
+                # 2.5 Call 006 (TransPolymer GNN API) to predict open-dataset based Tg and blend with 001 lab-data
+                logger.info(f"Calling 006 TransPolymer GNN API: {config.MODULE_006_URL}/predict")
+                gnn_tg = 0.0
+                total_ratio = 0.0
+                for monomer, ratio in best_recipe.items():
+                    smiles = monomer_mapper.MONOMER_SMILES_MAP.get(monomer)
+                    if smiles:
+                        try:
+                            res_006 = await client.post(
+                                f"{config.MODULE_006_URL}/predict",
+                                json={"smiles": smiles},
+                                timeout=5.0
+                            )
+                            if res_006.status_code == 200:
+                                data_006 = res_006.json()
+                                gnn_tg += data_006.get("Tg", -25.0) * (ratio / 100.0)
+                                total_ratio += (ratio / 100.0)
+                        except Exception as e_006:
+                            logger.warning(f"006 GNN prediction failed for {monomer}: {e_006}")
+                
+                if total_ratio > 0:
+                    gnn_tg = gnn_tg / total_ratio
+                else:
+                    gnn_tg = -25.0
+                    
+                if "Tg" in xgboost_prediction:
+                    original_xgboost_tg = xgboost_prediction["Tg"]
+                    # Blend 001 (Lab-data) and 006 (Open-dataset GNN) with a 50:50 ratio
+                    xgboost_prediction["Tg"] = (original_xgboost_tg + gnn_tg) / 2.0
+                    logger.info(f"Tg Blended: 001 Lab Tg ({original_xgboost_tg:.2f}) + 006 GNN Tg ({gnn_tg:.2f}) -> Blended Tg ({xgboost_prediction['Tg']:.2f})")
+
+                    
                 # 3. Call 013 (QA Gateway) to verify
                 payload = {
                     "target_properties": {
@@ -290,14 +322,20 @@ async def orchestrate_workflow(req: OrchestrationRequest):
             
             if not match_result.is_successful:
                 logger.info(f"[Task {task_id}] Matching failed. Falling back to Reverse Engineered status.")
-                return {"status": "reverse_engineered", "result": rev_result}
+                return {
+                    "status": "reverse_engineered", 
+                    "result": rev_result,
+                    "processability": proc_result.dict()
+                }
             
             logger.info(f"[Task {task_id}] Orchestration successful.")
             return {
                 "status": "matched", 
                 "result": match_result,
-                "reverse_engineered_result": rev_result
+                "reverse_engineered_result": rev_result,
+                "processability": proc_result.dict()
             }
+
         
         except asyncio.TimeoutError as te:
             logger.error(f"[Task {task_id} | PID {pid}] Operation timed out during orchestration: {str(te)}")
