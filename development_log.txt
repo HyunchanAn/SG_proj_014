@@ -149,3 +149,12 @@ CI/CD 안정화: 테스트 내 모킹 시그니처 오류 수정, python-dotenv 
 - [상세 내용]
   - src/main.py 내에 FastAPI REST API(/orchestrate 엔드포인트)를 성공적으로 구동하고 8014 포트에 실제 기동 완료.
   - 004 DB에 마이그레이션된 22종 제품의 오리지널 배합 레시피(AdhesiveRecipe)를 004 API(/adhesives/{code}/recipe)로부터 동적으로 조회하여 013 역설계 물성 편차 분석 및 비교 테이블 렌더링에 공급하도록 src/orchestrator.py의 연동 관계를 전격 고도화 완료.
+
+---
+Date: 2026-07-14
+Author: Antigravity
+
+[Updates]
+- Hardware Specs updated in README.md from RTX 5080/Windows to Apple M2 Pro/macOS.
+- Completed all local E2E and unit tests on macOS successfully without abort traps.
+- Verified GitHub Actions CI/CD workflows for the projects.
