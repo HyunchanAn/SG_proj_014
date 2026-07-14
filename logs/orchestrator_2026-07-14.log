@@ -1,0 +1,7 @@
+2026-07-14 01:56:39.058 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
+2026-07-14 01:56:39.059 | ERROR    | src.orchestrator:call_module_013_reverse_engineering:265 - AI Loop error: Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-14 01:56:39.059 | ERROR    | src.orchestrator:orchestrate_workflow:345 - [Task 95963e8c | PID 6263] Remote module execution failed: Reverse Engineering Failed: Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'. Please update 'monomer_mapping.json' with a valid SMILES definition.
+2026-07-14 01:56:39.061 | ERROR    | src.schemas:check_adhesion_growth:87 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-14 01:56:39.063 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:36 - Monomer mapping not found for abbreviation: 'UNKNOWN_MONOMER'
+2026-07-14 01:56:39.063 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'BAD_SYNTAX': 'Invalid_SMILES_String'
+2026-07-14 01:56:39.064 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:45 - RDKit validation failed for monomer 'VALENCE_ERR': 'C(=O)(=O)(=O)O'

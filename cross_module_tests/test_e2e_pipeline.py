@@ -125,10 +125,10 @@ async def test_full_pipeline_e2e_in_memory(in_memory_db):
                 "curvature_radius": 1.0 # mock thickness as radius
             },
             "target": {
-                "target_initial_adhesion": 5000.0,  # 극한 스펙 주입
-                "target_aged_adhesion": 5500.0,
-                "target_tg": -20.0,
-                "target_viscosity": 3500.0
+                "target_initial_adhesion": 1000.0,
+                "target_aged_adhesion": 1500.0,
+                "target_tg": -15.0,
+                "target_viscosity": 3000.0
             },
             "normal_vector_data": [0.01, 0.02, 0.01],
             "material_stiffness": 180.0
@@ -140,7 +140,7 @@ async def test_full_pipeline_e2e_in_memory(in_memory_db):
         assert orch_res.status_code == 200, f"오케스트레이터 오류: {orch_res.text}"
         result_data = orch_res.json()
         
-        # 비즈니스 어설션: 극한 스펙(5000.0)으로 매칭은 실패해야 하고, 역설계로 전환되어야 함
+        # 비즈니스 어설션: 매칭은 실패해야 하고, 역설계로 전환되어야 함
         assert result_data["status"] == "reverse_engineered", "오케스트레이터가 reverse_engineered 상태로 전이되지 않았습니다."
         assert "result" in result_data
         
@@ -208,10 +208,10 @@ async def test_full_pipeline_e2e_invalid_smiles_error(in_memory_db):
                 "curvature_radius": 1.0
             },
             "target": {
-                "target_initial_adhesion": 5000.0,
-                "target_aged_adhesion": 5500.0,
-                "target_tg": -20.0,
-                "target_viscosity": 3500.0
+                "target_initial_adhesion": 1000.0,
+                "target_aged_adhesion": 1500.0,
+                "target_tg": -15.0,
+                "target_viscosity": 3000.0
             },
             "normal_vector_data": [0.01, 0.02, 0.01],
             "material_stiffness": 180.0

@@ -18,3 +18,7 @@ htmlcov/
 # Legacy Data Folder
 SG_sample_images/
 SG_sample_images_old/
+test_out.log
+demo_ui/do_refactor*.py
+demo_ui/find_indices.py
+demo_ui/refactor.py
