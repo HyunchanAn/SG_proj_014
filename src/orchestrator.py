@@ -265,7 +265,9 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                 logger.error(f"AI Loop error: {e}")
                 raise RuntimeError(f"Reverse Engineering Failed: {e}")
             
-    return VerificationResult(is_passed=False, predicted_properties={}, error_rates={}, confidence_score=0.0, feedback_signal={"error": "Max iterations reached"})
+    # If we reached max iterations, return the last result anyway instead of empty dummy
+    result.predicted_properties["final_recipe"] = best_recipe
+    return result
 
 def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationRequest:
     # 1. HL 이방성 표면의 SFE Cassie-Baxter/Wenzel 왜곡 보정 레이어
