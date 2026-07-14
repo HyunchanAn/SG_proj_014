@@ -30,6 +30,8 @@ def convert_recipe_to_components(recipe: dict, n_polymerization: int) -> list[di
     """
     components = []
     for monomer, ratio in recipe.items():
+        if not monomer or monomer.strip("_") == "":
+            continue
         # 1. Fetch SMILES
         smiles = MONOMER_SMILES_MAP.get(monomer)
         if not smiles:
