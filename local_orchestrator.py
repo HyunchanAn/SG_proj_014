@@ -10,7 +10,7 @@ UVICORN_CMD = "/opt/homebrew/Caskroom/miniconda/base/bin/uvicorn"
 STREAMLIT_CMD = "/opt/homebrew/Caskroom/miniconda/base/bin/streamlit"
 
 modules = {
-    "SG_proj_001": {"cmd": [UVICORN_CMD, "api:app", "--host", "0.0.0.0", "--port", "8001"], "cwd": "SG_proj_001"},
+    "SG_proj_001": {"cmd": [UVICORN_CMD, "api.main:app", "--host", "0.0.0.0", "--port", "8001"], "cwd": "SG_proj_001"},
     "SG_proj_002": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8002"], "cwd": "SG_proj_002"},
     "SG_proj_003": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8003"], "cwd": "SG_proj_003"},
     "SG_proj_004": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8004"], "cwd": "SG_proj_004"},
@@ -18,10 +18,10 @@ modules = {
     "SG_proj_007": {"cmd": [UVICORN_CMD, "api:app", "--host", "0.0.0.0", "--port", "8007"], "cwd": "SG_proj_007"},
     "SG_proj_009": {"cmd": [UVICORN_CMD, "api:app", "--host", "0.0.0.0", "--port", "8009"], "cwd": "SG_proj_009"},
     "SG_proj_010": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8010"], "cwd": "SG_proj_010"},
-    "SG_proj_011": {"cmd": [UVICORN_CMD, "api:app", "--host", "0.0.0.0", "--port", "8011"], "cwd": "SG_proj_011"},
-    "SG_proj_012": {"cmd": [UVICORN_CMD, "api:app", "--host", "0.0.0.0", "--port", "8012"], "cwd": "SG_proj_012"},
+    "SG_proj_011": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8011"], "cwd": "SG_proj_011"},
+    "SG_proj_012": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8012"], "cwd": "SG_proj_012"},
     "SG_proj_013": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8013"], "cwd": "SG_proj_013"},
-    "SG_proj_014": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8014"], "cwd": "SG_proj_014"},
+    "SG_proj_014": {"cmd": [UVICORN_CMD, "src.main:app", "--host", "0.0.0.0", "--port", "8024"], "cwd": "SG_proj_014"},
 }
 
 env = os.environ.copy()
@@ -38,7 +38,7 @@ env["MODULE_010_URL"] = "http://127.0.0.1:8010"
 env["MODULE_011_URL"] = "http://127.0.0.1:8011"
 env["MODULE_012_URL"] = "http://127.0.0.1:8012"
 env["MODULE_013_URL"] = "http://127.0.0.1:8013"
-env["MODULE_014_URL"] = "http://127.0.0.1:8014"
+env["MODULE_014_URL"] = "http://127.0.0.1:8024"
 
 processes = []
 
