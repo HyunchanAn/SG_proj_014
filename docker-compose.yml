@@ -5,118 +5,46 @@ services:
     ports:
     - 8004:8000
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_002:
     build: ../SG_proj_002
     ports:
     - 8002:8000
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_003:
     build: ../SG_proj_003
     ports:
     - 8003:8000
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_007:
     build: ../SG_proj_007
     ports:
     - 8007:8000
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_011:
     build: ../SG_proj_011
     ports:
     - 8011:8000
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_012:
     build: ../SG_proj_012
     ports:
     - 8012:8000
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_001:
     build: ../SG_proj_001
     ports:
     - 8001:8001
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_009:
     build: ../SG_proj_009
     ports:
     - 8009:8009
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_013:
     build: ../SG_proj_013
     ports:
     - 8013:8000
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
   sg_proj_014:
     build: .
     ports:
@@ -126,16 +54,20 @@ services:
     - MODULE_001_URL=http://sg_proj_001:8001
     - MODULE_002_URL=http://sg_proj_002:8000
     - MODULE_003_URL=http://sg_proj_003:8000
+    - MODULE_006_URL=http://sg_proj_006:8506
     - MODULE_007_URL=http://sg_proj_007:8000
     - MODULE_009_URL=http://sg_proj_009:8009
+    - MODULE_010_URL=http://sg_proj_010:8000
     - MODULE_011_URL=http://sg_proj_011:8000
     - MODULE_012_URL=http://sg_proj_012:8000
     - MODULE_013_URL=http://sg_proj_013:8000
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities:
-            - gpu
+  sg_proj_006:
+    build: ../SG_proj_006
+    ports:
+    - 8006:8506
+    restart: unless-stopped
+  sg_proj_010:
+    build: ../SG_proj_010
+    ports:
+    - 8010:8000
+    restart: unless-stopped
