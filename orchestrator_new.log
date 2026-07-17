@@ -1,0 +1,16 @@
+Starting local orchestrator for all modules...
+Started SG_proj_001 with PID 41555
+Started SG_proj_002 with PID 41556
+Started SG_proj_003 with PID 41557
+Started SG_proj_004 with PID 41558
+Started SG_proj_006 with PID 41559
+Started SG_proj_007 with PID 41560
+Started SG_proj_009 with PID 41561
+Started SG_proj_010 with PID 41562
+Started SG_proj_011 with PID 41563
+Started SG_proj_012 with PID 41564
+Started SG_proj_013 with PID 41565
+Started SG_proj_014 with PID 41566
+All modules started. Running in background. Press Ctrl+C to stop.
+
+Cleaning up processes...
