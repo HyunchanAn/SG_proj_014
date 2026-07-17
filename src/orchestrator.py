@@ -149,11 +149,12 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
         "Tg": req.target.target_tg
     }
     
-    # Fixed context (mocked for this example)
+    # Fixed context mapping for surrogate models (including newly required Adhesion test conditions)
     fixed_ctx = {
         "온도": 83,
         "반응시간": 5,
-        "박리_각도": 90,
+        "박리_각도": req.target.adhesion_test_angle,
+        "점착_기재": req.target.adhesion_test_substrate,
         "금속_표면": req.finish_type
     }
     
