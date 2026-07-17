@@ -40,8 +40,8 @@ class PipelineConfig:
         self.MODULE_011_URL = os.getenv("MODULE_011_URL", "http://localhost:8011")
         self.MODULE_012_URL = os.getenv("MODULE_012_URL", "http://localhost:8012")
         self.MODULE_013_URL = os.getenv("MODULE_013_URL", "http://localhost:8013")
-        self.MODULE_001_URL = os.getenv("MODULE_001_URL", "http://001-polysim:8001")
-        self.MODULE_009_URL = os.getenv("MODULE_009_URL", "http://009-irgnn:8009")
+        self.MODULE_001_URL = os.getenv("MODULE_001_URL", "http://localhost:8001")
+        self.MODULE_009_URL = os.getenv("MODULE_009_URL", "http://localhost:8009")
         self.MODULE_006_URL = os.getenv("MODULE_006_URL", "http://localhost:8006")
 
 

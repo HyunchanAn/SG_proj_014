@@ -7,6 +7,7 @@ from loguru import logger
 from src.schemas import OrchestrationRequest
 from src.orchestrator import orchestrate_workflow
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 
 # Loguru Logger 설정 (JSON 및 표준 스트림 포맷 일치)
 logger.remove()
@@ -25,6 +26,14 @@ logger.add(
 )
 
 app = FastAPI(title="SG_proj_014 Central Orchestrator", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -69,6 +78,26 @@ async def orchestrate(req: OrchestrationRequest):
     result = await orchestrate_workflow(req)
     logger.info(f"Orchestration completed successfully for substrate: {req.substrate_id}")
     return result
+
+@app.post("/inverse_cvae")
+async def inverse_cvae(req: Request):
+    """Proxy to 001 CVAE endpoint"""
+    import httpx
+    from src.config import config
+    body = await req.json()
+    async with httpx.AsyncClient() as client:
+        res = await client.post(f"{config.MODULE_001_URL}/optimize_cvae", json=body, timeout=10.0)
+    return res.json()
+
+@app.post("/inverse_nsga2")
+async def inverse_nsga2(req: Request):
+    """Proxy to 001 NSGA2 endpoint"""
+    import httpx
+    from src.config import config
+    body = await req.json()
+    async with httpx.AsyncClient() as client:
+        res = await client.post(f"{config.MODULE_001_URL}/optimize_nsga2", json=body, timeout=60.0)
+    return res.json()
 
 if __name__ == "__main__":
     uvicorn.run("src.main:app", host="0.0.0.0", port=8024, reload=True)
