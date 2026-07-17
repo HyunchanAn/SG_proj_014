@@ -71,6 +71,8 @@ class Step2Target(BaseModel):
     target_aged_adhesion: float = Field(..., ge=0.0, description="목표 후기 경시 점착력 (gf/25mm)", json_schema_extra={"example": 990.0})
     target_tg: float = Field(..., ge=-80.0, le=0.0, description="목표 유리전이온도 (Tg, °C)", json_schema_extra={"example": -20.0})
     target_viscosity: float = Field(..., ge=0.0, description="목표 점도 (cps)", json_schema_extra={"example": 3500.0})
+    adhesion_test_angle: str = Field(default="90", description="점착력 테스트 박리 각도 (예: 90, 180)")
+    adhesion_test_substrate: str = Field(default="BA", description="점착력 테스트 기재 (예: BA, SUS)")
 
     @field_validator("target_tg")
     @classmethod
