@@ -186,41 +186,47 @@ async def test_full_pipeline_e2e_invalid_smiles_error(in_memory_db):
         return_value=Response(200, json={"recommendations": [], "is_successful": False})
     )
 
-    # 001 returns a recipe with UNKNOWN monomer to trigger mapping error
-    respx.post(url__regex=r"http://.*/optimize").mock(
-        return_value=Response(200, json={"recipe": {"UNKNOWN_MONOMER": 0.5}, "predicted_properties": {"측정_값": 4800.0}})
-    )
+    from src.utils.monomer_mapper import MONOMER_SMILES_MAP
+    MONOMER_SMILES_MAP["BAD_SYNTAX"] = "Invalid_SMILES"
+    
+    try:
+        # 001 returns a recipe with BAD_SYNTAX monomer to trigger mapping error
+        respx.post(url__regex=r"http://.*/optimize").mock(
+            return_value=Response(200, json={"recipe": {"BAD_SYNTAX": 0.5}, "predicted_properties": {"측정_값": 4800.0}})
+        )
 
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
-        db_res = httpx.get("http://localhost:8004/adherends/search?roughness_md_max=1.0")
-        target_adherend = db_res.json()[0]
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            db_res = httpx.get("http://localhost:8004/adherends/search?roughness_md_max=1.0")
+            target_adherend = db_res.json()[0]
 
-        payload = {
-            "substrate_id": target_adherend["product_name"],
-            "substrate_series": "SGV",
-            "thickness_um": 100.0,
-            "finish_type": target_adherend["classification"],
-            "metrics": {
-                "surface_energy": target_adherend["surface_energy_md"],
-                "roughness": target_adherend["roughness_md"],
-                "gloss": target_adherend["gloss_md"],
-                "curvature_radius": 1.0
-            },
-            "target": {
-                "target_initial_adhesion": 1000.0,
-                "target_aged_adhesion": 1500.0,
-                "target_tg": -15.0,
-                "target_viscosity": 3000.0
-            },
-            "normal_vector_data": [0.01, 0.02, 0.01],
-            "material_stiffness": 180.0
-        }
+            payload = {
+                "substrate_id": target_adherend["product_name"],
+                "substrate_series": "SGV",
+                "thickness_um": 100.0,
+                "finish_type": target_adherend["classification"],
+                "metrics": {
+                    "surface_energy": target_adherend["surface_energy_md"],
+                    "roughness": target_adherend["roughness_md"],
+                    "gloss": target_adherend["gloss_md"],
+                    "curvature_radius": 1.0
+                },
+                "target": {
+                    "target_initial_adhesion": 1000.0,
+                    "target_aged_adhesion": 1500.0,
+                    "target_tg": -15.0,
+                    "target_viscosity": 3000.0
+                },
+                "normal_vector_data": [0.01, 0.02, 0.01],
+                "material_stiffness": 180.0
+            }
 
-        orch_res = await client.post("/orchestrate", json=payload)
-        assert orch_res.status_code == 200
-        result_data = orch_res.json()
+            orch_res = await client.post("/orchestrate", json=payload)
+            assert orch_res.status_code == 200
+            result_data = orch_res.json()
 
-        assert result_data["status"] == "error"
-        assert result_data["error"] == "Module Execution Failed"
-        assert "Monomer mapping not found for abbreviation" in result_data["details"]
+            assert result_data["status"] == "error"
+            assert result_data["error"] == "Module Execution Failed"
+            assert "Invalid SMILES for monomer" in result_data["details"]
+    finally:
+        del MONOMER_SMILES_MAP["BAD_SYNTAX"]

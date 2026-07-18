@@ -1,0 +1,11 @@
+2026-07-19 01:01:02.872 | WARNING  | src.utils.monomer_mapper:convert_recipe_to_components:86 - PubChem fallback failed for 'UNKNOWN_MONOMER'. Adding to failed cache and skipping.
+2026-07-19 01:01:02.874 | ERROR    | src.orchestrator:call_module_013_reverse_engineering:266 - AI Loop error: RESPX: <Request('POST', 'http://localhost:8009/predict')> not mocked!
+2026-07-19 01:01:02.874 | ERROR    | src.orchestrator:orchestrate_workflow:348 - [Task 15639732 | PID 64246] Remote module execution failed: Reverse Engineering Failed: RESPX: <Request('POST', 'http://localhost:8009/predict')> not mocked!
+2026-07-19 01:01:02.923 | ERROR    | src.schemas:check_adhesion_growth:89 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-19 01:37:42.246 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:93 - RDKit validation failed for monomer 'BAD_SYNTAX': 'Invalid_SMILES'
+2026-07-19 01:37:42.247 | ERROR    | src.orchestrator:call_module_013_reverse_engineering:266 - AI Loop error: Invalid SMILES for monomer 'BAD_SYNTAX': Invalid_SMILES. RDKit could not parse the molecule or detected valence errors.
+2026-07-19 01:37:42.247 | ERROR    | src.orchestrator:orchestrate_workflow:348 - [Task 0f4f1121 | PID 66060] Remote module execution failed: Reverse Engineering Failed: Invalid SMILES for monomer 'BAD_SYNTAX': Invalid_SMILES. RDKit could not parse the molecule or detected valence errors.
+2026-07-19 01:37:42.249 | ERROR    | src.schemas:check_adhesion_growth:89 - [DOMAIN ERROR] 물리적 경시 상승 법칙 위배 인입 건 차단
+2026-07-19 01:37:43.212 | WARNING  | src.utils.monomer_mapper:convert_recipe_to_components:86 - PubChem fallback failed for 'UNKNOWN_MONOMER'. Adding to failed cache and skipping.
+2026-07-19 01:37:43.213 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:93 - RDKit validation failed for monomer 'BAD_SYNTAX': 'Invalid_SMILES_String'
+2026-07-19 01:37:43.216 | ERROR    | src.utils.monomer_mapper:convert_recipe_to_components:93 - RDKit validation failed for monomer 'VALENCE_ERR': 'C(=O)(=O)(=O)O'

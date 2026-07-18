@@ -75,10 +75,9 @@ def test_monomer_mapper_validation_failures():
     from src.utils import monomer_mapper
     import pytest
 
-    # 1. Test missing monomer in mapping json
-    with pytest.raises(ValueError) as exc_info:
-        monomer_mapper.convert_recipe_to_components({"UNKNOWN_MONOMER": 0.5}, 10)
-    assert "Monomer mapping not found for abbreviation" in str(exc_info.value)
+    # 1. Test missing monomer in mapping json (now skips and returns empty list after PubChem fails)
+    result = monomer_mapper.convert_recipe_to_components({"UNKNOWN_MONOMER": 0.5}, 10)
+    assert result == []
 
     # 2. Test invalid SMILES syntax
     # Temporarily insert an invalid mapping to mapping dictionary to trigger parse error
