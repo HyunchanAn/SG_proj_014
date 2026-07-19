@@ -1,6 +1,7 @@
 # 통합 모듈 오케스트레이션 아키텍처 및 결과 보고서
 
 ![Status](https://img.shields.io/badge/Status-v1.1%20Release-brightgreen) ![Python](https://img.shields.io/badge/Python-3.12%2B-blue) ![Backend](https://img.shields.io/badge/Backend-FastAPI-red)
+![Hardware](https://img.shields.io/badge/Hardware-Mac_M2_Pro_%7C_Win_RTX5080-lightgrey)
 
 프로젝트 코드: SG_proj_014
 프로젝트 별칭: SG-Orchestrator
@@ -68,16 +69,5 @@
 ### C. 검증 결과 요약
 전체 모듈이 사전에 정의된 OpenAPI 스키마(schemas.py) 규격을 준수하며 데이터 병목이나 포맷 충돌 없이 연동되었습니다. 역설계 루프 또한 설정된 최대 반복 횟수 내에서 유의미한 수렴 결과를 도출함을 확인했습니다.
 
-
 ---
-*Updated by System: 2026-06-29 (Resolved 260627 Analysis Report priority issues)*
-
----
-*Updated by System: 2026-06-29 (Reverse Engineering Pipeline Integrated)*
-## 2026-07-05 업데이트
-- E2E 테스트 환경 인메모리 격리 및 도메인 기반 Pydantic 스키마 검증 룰 추가 완료.
-- GPU 가속 컨테이너화 및 오케스트레이터 비동기 로깅/예외 처리 고도화 완료.
-
-## 2026-07-17 업데이트
-- `SG_proj_015`의 HTML 프론트엔드 프로토타입에서 본 API를 직접 호출할 수 있도록 `main.py`에 전역 `CORSMiddleware` 허용 설정을 주입했습니다.
-- 원클릭 테스트 서버 구동을 돕기 위해 `boot_api.bat` (포트 8024) 배치 스크립트를 신설했습니다.
+*Last Updated: 2026-07-19 (Hybrid Environment & MSA Integration)*
