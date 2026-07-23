@@ -1,0 +1,48 @@
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.5.0) or chardet (7.4.3)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+INFO:     Started server process [15792]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8024 (Press CTRL+C to quit)
+2026-07-23 15:49:17.320 | INFO     | src.main:orchestrate:77 - Orchestration request received for substrate: HL
+2026-07-23 15:49:17.321 | INFO     | src.orchestrator:orchestrate_workflow:293 - [Task d00d12e8 | PID 15792] Starting orchestration workflow for HL (2B)
+2026-07-23 15:49:17.321 | INFO     | src.orchestrator:call_vision_modules:23 - Calling vision modules 002, 003, 007 concurrently with actual sample images for finish_type: 2B
+2026-07-23 15:49:25.430 | INFO     | src.orchestrator:call_vision_modules:74 - Vision modules result: [<Response [200 OK]>, <Response [422 Unprocessable Content]>, <Response [200 OK]>]
+2026-07-23 15:49:25.435 | INFO     | src.orchestrator:call_module_011_processability:96 - Calling module 011 at http://localhost:8011
+2026-07-23 15:49:25.522 | INFO     | src.orchestrator:orchestrate_workflow:317 - [Task d00d12e8] Applying thickness penalty 1 for SGV 100.0um
+2026-07-23 15:49:25.522 | INFO     | src.orchestrator:call_module_012_matching:114 - Calling module 012 at http://localhost:8012
+2026-07-23 15:49:25.678 | INFO     | src.orchestrator:call_module_013_reverse_engineering:142 - Starting reverse engineering loop with http://localhost:8013
+2026-07-23 15:49:25.679 | INFO     | src.orchestrator:call_module_013_reverse_engineering:162 - Iteration 1/5
+2026-07-23 15:49:25.683 | INFO     | src.orchestrator:call_module_013_reverse_engineering:171 - Calling 001 PolySim API: http://localhost:8001/optimize
+2026-07-23 15:49:25.798 | INFO     | src.orchestrator:call_module_013_reverse_engineering:182 - Calling 009 IR GNN API: http://localhost:8009/predict
+2026-07-23 15:49:26.327 | INFO     | src.orchestrator:call_module_013_reverse_engineering:198 - Calling 006 TransPolymer GNN API: http://localhost:8006/predict
+2026-07-23 15:49:26.327 | INFO     | src.orchestrator:call_module_013_reverse_engineering:241 - Calling 013 QA Gateway API: http://localhost:8013/verify
+2026-07-23 15:49:26.372 | INFO     | src.orchestrator:call_module_013_reverse_engineering:255 - Feedback received: {'suggested_action': 'adjust_parameters', 'next_iteration': 2}. Adjusting targets.
+2026-07-23 15:49:26.372 | INFO     | src.orchestrator:call_module_013_reverse_engineering:162 - Iteration 2/5
+2026-07-23 15:49:26.377 | INFO     | src.orchestrator:call_module_013_reverse_engineering:171 - Calling 001 PolySim API: http://localhost:8001/optimize
+2026-07-23 15:49:26.379 | INFO     | src.orchestrator:call_module_013_reverse_engineering:182 - Calling 009 IR GNN API: http://localhost:8009/predict
+2026-07-23 15:49:26.388 | INFO     | src.orchestrator:call_module_013_reverse_engineering:198 - Calling 006 TransPolymer GNN API: http://localhost:8006/predict
+2026-07-23 15:49:26.388 | INFO     | src.orchestrator:call_module_013_reverse_engineering:241 - Calling 013 QA Gateway API: http://localhost:8013/verify
+2026-07-23 15:49:26.392 | INFO     | src.orchestrator:call_module_013_reverse_engineering:255 - Feedback received: {'suggested_action': 'adjust_parameters', 'next_iteration': 3}. Adjusting targets.
+2026-07-23 15:49:26.392 | INFO     | src.orchestrator:call_module_013_reverse_engineering:162 - Iteration 3/5
+2026-07-23 15:49:26.397 | INFO     | src.orchestrator:call_module_013_reverse_engineering:171 - Calling 001 PolySim API: http://localhost:8001/optimize
+2026-07-23 15:49:26.421 | INFO     | src.orchestrator:call_module_013_reverse_engineering:182 - Calling 009 IR GNN API: http://localhost:8009/predict
+2026-07-23 15:49:26.430 | INFO     | src.orchestrator:call_module_013_reverse_engineering:198 - Calling 006 TransPolymer GNN API: http://localhost:8006/predict
+2026-07-23 15:49:26.430 | INFO     | src.orchestrator:call_module_013_reverse_engineering:241 - Calling 013 QA Gateway API: http://localhost:8013/verify
+2026-07-23 15:49:26.434 | INFO     | src.orchestrator:call_module_013_reverse_engineering:255 - Feedback received: {'suggested_action': 'adjust_parameters', 'next_iteration': 4}. Adjusting targets.
+2026-07-23 15:49:26.434 | INFO     | src.orchestrator:call_module_013_reverse_engineering:162 - Iteration 4/5
+2026-07-23 15:49:26.439 | INFO     | src.orchestrator:call_module_013_reverse_engineering:171 - Calling 001 PolySim API: http://localhost:8001/optimize
+2026-07-23 15:49:26.441 | INFO     | src.orchestrator:call_module_013_reverse_engineering:182 - Calling 009 IR GNN API: http://localhost:8009/predict
+2026-07-23 15:49:26.449 | INFO     | src.orchestrator:call_module_013_reverse_engineering:198 - Calling 006 TransPolymer GNN API: http://localhost:8006/predict
+2026-07-23 15:49:26.449 | INFO     | src.orchestrator:call_module_013_reverse_engineering:241 - Calling 013 QA Gateway API: http://localhost:8013/verify
+2026-07-23 15:49:26.453 | INFO     | src.orchestrator:call_module_013_reverse_engineering:255 - Feedback received: {'suggested_action': 'adjust_parameters', 'next_iteration': 5}. Adjusting targets.
+2026-07-23 15:49:26.453 | INFO     | src.orchestrator:call_module_013_reverse_engineering:162 - Iteration 5/5
+2026-07-23 15:49:26.458 | INFO     | src.orchestrator:call_module_013_reverse_engineering:171 - Calling 001 PolySim API: http://localhost:8001/optimize
+2026-07-23 15:49:26.460 | INFO     | src.orchestrator:call_module_013_reverse_engineering:182 - Calling 009 IR GNN API: http://localhost:8009/predict
+2026-07-23 15:49:26.467 | INFO     | src.orchestrator:call_module_013_reverse_engineering:198 - Calling 006 TransPolymer GNN API: http://localhost:8006/predict
+2026-07-23 15:49:26.467 | INFO     | src.orchestrator:call_module_013_reverse_engineering:241 - Calling 013 QA Gateway API: http://localhost:8013/verify
+2026-07-23 15:49:26.472 | INFO     | src.orchestrator:call_module_013_reverse_engineering:255 - Feedback received: {'suggested_action': 'adjust_parameters', 'next_iteration': 6}. Adjusting targets.
+2026-07-23 15:49:26.472 | INFO     | src.orchestrator:orchestrate_workflow:327 - [Task d00d12e8] Matching failed. Falling back to Reverse Engineered status.
+2026-07-23 15:49:26.474 | INFO     | src.orchestrator:orchestrate_workflow:356 - [Task d00d12e8 | PID 15792] Orchestration workflow execution finished.
+2026-07-23 15:49:26.474 | INFO     | src.main:orchestrate:79 - Orchestration completed successfully for substrate: HL
+INFO:     127.0.0.1:54260 - "POST /orchestrate HTTP/1.1" 200 OK
