@@ -27,3 +27,14 @@ demo_ui/refactor.py
 raw_data/
 *.db
 *.log
+
+# Global security rules
+*.csv
+*.xlsx
+*.pkl
+*.onnx
+*.pt
+data*/
+models/
+raw_data/
+*.db
