@@ -1,6 +1,7 @@
 import json
-import requests
 from pathlib import Path
+
+import requests
 from loguru import logger
 from rdkit import Chem
 

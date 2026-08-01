@@ -1,6 +1,8 @@
 import pytest
 from pydantic import ValidationError
-from src.schemas import Step2Target, Step1Metrics, OrchestrationRequest
+
+from src.schemas import OrchestrationRequest, Step1Metrics, Step2Target
+
 
 def test_adhesion_domain_rule():
     # Valid case
@@ -72,8 +74,9 @@ def test_rdkit_smiles_validity():
     assert Chem.MolFromSmiles("InvalidSmilesString!!!") is None
 
 def test_monomer_mapper_validation_failures():
-    from src.utils import monomer_mapper
     import pytest
+
+    from src.utils import monomer_mapper
 
     # 1. Test missing monomer in mapping json (now skips and returns empty list after PubChem fails)
     result = monomer_mapper.convert_recipe_to_components({"UNKNOWN_MONOMER": 0.5}, 10)

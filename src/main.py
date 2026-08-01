@@ -1,13 +1,14 @@
 import sys
+
+import uvicorn
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from loguru import logger
 
-from src.schemas import OrchestrationRequest
 from src.orchestrator import orchestrate_workflow
-import uvicorn
-from fastapi.middleware.cors import CORSMiddleware
+from src.schemas import OrchestrationRequest
 
 # Loguru Logger 설정 (JSON 및 표준 스트림 포맷 일치)
 logger.remove()
@@ -83,6 +84,7 @@ async def orchestrate(req: OrchestrationRequest):
 async def inverse_cvae(req: Request):
     """Proxy to 001 CVAE endpoint"""
     import httpx
+
     from src.config import config
     body = await req.json()
     async with httpx.AsyncClient() as client:
@@ -93,6 +95,7 @@ async def inverse_cvae(req: Request):
 async def inverse_nsga2(req: Request):
     """Proxy to 001 NSGA2 endpoint"""
     import httpx
+
     from src.config import config
     body = await req.json()
     async with httpx.AsyncClient() as client:

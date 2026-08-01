@@ -1,5 +1,6 @@
+
 from pydantic import BaseModel, Field, field_validator, model_validator
-from typing import Optional
+
 
 # SG_proj_011
 class TopographyInput(BaseModel):
@@ -41,7 +42,7 @@ class VerificationResult(BaseModel):
     predicted_properties: dict
     error_rates: dict
     confidence_score: float
-    feedback_signal: Optional[dict] = Field(None, description="오차 초과 시 보정 파라미터 제안")
+    feedback_signal: dict | None = Field(None, description="오차 초과 시 보정 파라미터 제안")
 
 # Orchestrator Request (Refactored for SI Handover)
 class Step1Metrics(BaseModel):

@@ -1,10 +1,11 @@
-import pytest
+import logging
+
 import httpx
+import pytest
 import respx
 from httpx import Response
-from sqlalchemy import create_engine, Column, Integer, String, Float
+from sqlalchemy import Column, Float, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-import logging
 
 from src.main import app
 
