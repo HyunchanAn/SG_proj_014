@@ -7,7 +7,6 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 import logging
 
 from src.main import app
-from fastapi.testclient import TestClient
 
 logger = logging.getLogger(__name__)
 
