@@ -181,10 +181,10 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     data_001 = res_001.json()
                     best_recipe = data_001.get("recipe", {})
                     xgboost_prediction = data_001.get("predicted_properties", {})
+                    initial_recipe = best_recipe
                     if iteration == 1:
                         source = data_001.get("selection_source", "de")
                         logger.info(f"001 Engine Source at Iter 1: {source}")
-                        initial_recipe = best_recipe
                     
                 # 2. Call 009 (IR GNN) to predict IR features based on the recipe
                 logger.info(f"Calling 009 IR GNN API: {config.MODULE_009_URL}/predict")
