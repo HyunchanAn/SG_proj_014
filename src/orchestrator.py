@@ -240,7 +240,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     result.predicted_properties["final_recipe"] = best_recipe
                     return result
                 else:
-                    # Update target properties based on proportional feedback deviation
+                    # Apply explicit target adjustments proposed by QA Gateway (013)
                     if result.feedback_signal and "target_adjustments" in result.feedback_signal:
                         adjustments = result.feedback_signal["target_adjustments"]
                         logger.info(f"Applying target adjustments from 013: {adjustments}")
