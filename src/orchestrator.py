@@ -22,6 +22,12 @@ MODULE_007_URL = config.MODULE_007_URL
 import base64
 from pathlib import Path
 
+class ModuleExecutionError(Exception):
+    def __init__(self, module_id: str, code: str, message: str):
+        self.module_id = module_id
+        self.code = code
+        self.message = message
+        super().__init__(self.message)
 
 async def call_vision_modules(finish_type: str = "Hairline", image_base64: str | None = None) -> tuple[dict, bool]:
     is_degraded = False
@@ -71,7 +77,7 @@ async def call_vision_modules(finish_type: str = "Hairline", image_base64: str |
             return vision_metrics, is_degraded
         except Exception as e:
             logger.error(f"Vision modules error: {e}")
-            raise RuntimeError(f"Vision module error: {e}")
+            raise ModuleExecutionError("vision", "VISION_ERROR", f"Vision module error: {e}")
 
 async def call_module_011_processability(req: OrchestrationRequest) -> ProcessabilityResult:
     logger.info(f"Calling module 011 at {MODULE_011_URL}")
@@ -85,11 +91,13 @@ async def call_module_011_processability(req: OrchestrationRequest) -> Processab
             res = await client.post(f"{MODULE_011_URL}/calculate_processability", json=payload)
             if res.status_code != 200:
                 logger.error(f"Module 011 returned status {res.status_code}")
-                raise RuntimeError(f"Module 011 Error: {res.status_code}")
+                raise ModuleExecutionError("011", "PROC_ERROR", f"Module 011 Error: {res.status_code}")
             return ProcessabilityResult(**res.json())
     except Exception as e:
         logger.error(f"Module 011 error: {e}")
-        raise RuntimeError(f"Module 011 communication failed: {e}")
+        if isinstance(e, ModuleExecutionError):
+            raise e
+        raise ModuleExecutionError("011", "PROC_COMM_ERROR", f"Module 011 communication failed: {e}")
 
 async def call_module_012_matching(req: OrchestrationRequest, proc_level: int, task_id: str) -> MatchingResponse:
     logger.info(f"Calling module 012 at {MODULE_012_URL}")
@@ -246,7 +254,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                         
             except Exception as e:
                 logger.error(f"AI Loop error: {e}")
-                raise RuntimeError(f"Reverse Engineering Failed: {e}")
+                raise ModuleExecutionError("013", "REV_ENG_FAILED", f"Reverse Engineering Failed: {e}")
             
     # If we reached max iterations, return the last result anyway instead of empty dummy
     result.predicted_properties["final_recipe"] = best_recipe
@@ -324,6 +332,10 @@ async def orchestrate_workflow(req: OrchestrationRequest):
             }
 
         
+        except ModuleExecutionError as me:
+            logger.error(f"[Task {task_id} | PID {pid}] Module execution failed: {me.module_id} - {me.message}")
+            return {"status": "error", "error_code": me.code, "module": me.module_id, "message": me.message}
+            
         except asyncio.TimeoutError as te:
             logger.error(f"[Task {task_id} | PID {pid}] Operation timed out during orchestration: {str(te)}")
             return {"status": "error", "error_code": "TIMEOUT", "module": "014", "message": f"Operation Timeout: {str(te)}"}

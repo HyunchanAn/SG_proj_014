@@ -29,6 +29,7 @@ class ProductRecommendation(BaseModel):
 class MatchingResponse(BaseModel):
     recommendations: list[ProductRecommendation] = Field(max_length=3)
     is_successful: bool
+    source: str = "database"
 
 # SG_proj_013
 class ReverseEngineeringInput(BaseModel):
