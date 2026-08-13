@@ -148,6 +148,8 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
         "금속_표면": req.finish_type
     }
     
+    initial_recipe = None
+    
     for iteration in range(1, MAX_ITERATIONS + 1):
         logger.info(f"Iteration {iteration}/{MAX_ITERATIONS}")
         
@@ -155,18 +157,34 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
         ir_gnn_features = []
         best_recipe = {}
         
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             try:
                 # 1. Call 001 (PolySim) to optimize recipe
-                logger.info(f"Calling 001 PolySim API: {config.MODULE_001_URL}/optimize")
-                res_001 = await client.post(
-                    f"{config.MODULE_001_URL}/optimize", 
-                    json={"target_properties": current_targets, "fixed_context": fixed_ctx}
-                )
+                if iteration == 1:
+                    logger.info(f"Calling 001 PolySim API (NSGA-II): {config.MODULE_001_URL}/optimize_smart")
+                    res_001 = await client.post(
+                        f"{config.MODULE_001_URL}/optimize_smart", 
+                        json={"target_properties": current_targets, "fixed_context": fixed_ctx}
+                    )
+                else:
+                    logger.info(f"Calling 001 PolySim API (DE Warm-start): {config.MODULE_001_URL}/optimize")
+                    res_001 = await client.post(
+                        f"{config.MODULE_001_URL}/optimize", 
+                        json={
+                            "target_properties": current_targets,
+                            "fixed_context": fixed_ctx,
+                            "initial_recipe": initial_recipe
+                        }
+                    )
+                
                 if res_001.status_code == 200:
                     data_001 = res_001.json()
                     best_recipe = data_001.get("recipe", {})
                     xgboost_prediction = data_001.get("predicted_properties", {})
+                    if iteration == 1:
+                        source = data_001.get("selection_source", "de")
+                        logger.info(f"001 Engine Source at Iter 1: {source}")
+                        initial_recipe = best_recipe
                     
                 # 2. Call 009 (IR GNN) to predict IR features based on the recipe
                 logger.info(f"Calling 009 IR GNN API: {config.MODULE_009_URL}/predict")
