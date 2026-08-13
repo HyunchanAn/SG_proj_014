@@ -1,5 +1,6 @@
 import asyncio
 import os
+import math
 
 import httpx
 from loguru import logger
@@ -150,6 +151,24 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
     
     initial_recipe = None
     
+    # Best-so-far tracker
+    best_recipe_so_far = None
+    best_prediction_so_far = None
+    min_error_so_far = float('inf')
+    
+    original_targets = {
+        "측정_값": req.target.target_initial_adhesion, 
+        "점도(cP)": req.target.target_viscosity,
+        "Tg": req.target.target_tg
+    }
+    
+    def calc_error(pred):
+        err = 0.0
+        err += (abs(original_targets["측정_값"] - pred.get("측정_값", 1500)) / 2000.0) ** 2
+        err += (abs(original_targets["Tg"] - pred.get("Tg", -15)) / 80.0) ** 2
+        err += (abs(original_targets["점도(cP)"] - pred.get("점도(cP)", 2000)) / 5000.0) ** 2
+        return math.sqrt(err)
+
     for iteration in range(1, MAX_ITERATIONS + 1):
         logger.info(f"Iteration {iteration}/{MAX_ITERATIONS}")
         
@@ -255,9 +274,17 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     break
                 
                 result = VerificationResult(**res_013.json())
+                
+                current_err = calc_error(xgboost_prediction)
+                if current_err < min_error_so_far:
+                    min_error_so_far = current_err
+                    best_recipe_so_far = best_recipe
+                    best_prediction_so_far = xgboost_prediction
+                    
                 if result.is_passed:
                     logger.info("Reverse engineering loop converged successfully.")
-                    result.predicted_properties["final_recipe"] = best_recipe
+                    result.predicted_properties = best_prediction_so_far
+                    result.predicted_properties["final_recipe"] = best_recipe_so_far
                     return result
                 else:
                     # Apply explicit target adjustments proposed by QA Gateway (013)
@@ -273,8 +300,9 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                 logger.error(f"AI Loop error: {e}")
                 raise ModuleExecutionError("013", "REV_ENG_FAILED", f"Reverse Engineering Failed: {e}")
             
-    # If we reached max iterations, return the last result anyway instead of empty dummy
-    result.predicted_properties["final_recipe"] = best_recipe
+    # If we reached max iterations, return the best result instead of the last one
+    result.predicted_properties = best_prediction_so_far
+    result.predicted_properties["final_recipe"] = best_recipe_so_far
     return result
 
 def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationRequest:
