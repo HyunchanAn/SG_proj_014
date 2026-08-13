@@ -301,8 +301,12 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                 raise ModuleExecutionError("013", "REV_ENG_FAILED", f"Reverse Engineering Failed: {e}")
             
     # If we reached max iterations, return the best result instead of the last one
-    result.predicted_properties = best_prediction_so_far
-    result.predicted_properties["final_recipe"] = best_recipe_so_far
+    if best_recipe_so_far is not None:
+        result.predicted_properties = best_prediction_so_far
+        result.predicted_properties["final_recipe"] = best_recipe_so_far
+    else:
+        # Fallback if no iteration produced a valid error comparison
+        result.predicted_properties["final_recipe"] = best_recipe
     return result
 
 def apply_physical_corrections(req: OrchestrationRequest) -> OrchestrationRequest:
