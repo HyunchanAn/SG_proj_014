@@ -241,16 +241,13 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     return result
                 else:
                     # Update target properties based on proportional feedback deviation
-                    if result.feedback_signal:
-                        logger.info(f"Feedback received: {result.feedback_signal}. Adjusting targets.")
+                    if result.feedback_signal and "target_adjustments" in result.feedback_signal:
+                        adjustments = result.feedback_signal["target_adjustments"]
+                        logger.info(f"Applying target adjustments from 013: {adjustments}")
                         
-                        target_adhesion = req.target.target_initial_adhesion
-                        predicted_adhesion = xgboost_prediction.get("측정_값", target_adhesion)
-                        
-                        # Adjust target using proportional delta (damping coefficient 0.5)
-                        adhesion_delta = (target_adhesion - predicted_adhesion) * 0.5
-                        adhesion_delta = max(-200.0, min(200.0, adhesion_delta))
-                        current_targets["측정_값"] += adhesion_delta
+                        for k, v in adjustments.items():
+                            if k in current_targets:
+                                current_targets[k] += v
                         
             except Exception as e:
                 logger.error(f"AI Loop error: {e}")
