@@ -23,51 +23,28 @@ import base64
 from pathlib import Path
 
 
-async def call_vision_modules(finish_type: str = "Hairline") -> dict:
-    logger.info(f"Calling vision modules 002, 003, 007 concurrently with actual sample images for finish_type: {finish_type}")
-    
-    # Map finish type to real corporate sample images
-    sample_dir = Path("/Users/hyunchanan/Documents/GitHub/SG_proj_015/SG_sample_images/260521 test_image (droplet)")
-    prefix = "HL"
-    if finish_type in ["Mirror", "BA"]:
-        prefix = "BA"
-    elif finish_type in ["2B", "2D"]:
-        prefix = "2B"
-        
-    sfe_path = sample_dir / prefix / f"{prefix}_water.jpg"
-    vsams_path = sample_dir / prefix / f"{prefix}_reflect.jpg"
-    # Using specific image for the 3D depth map base image per user request
-    terra_path = Path("/Users/hyunchanan/Documents/GitHub/SG_proj_015/SG_sample_images/press_example.jpg")
-    
-    # Fallback to any available image if path mismatch
-    if not sfe_path.exists():
-        img_files = list(sample_dir.glob("*/*.jpg"))
-        if img_files:
-            sfe_path = img_files[0]
-            vsams_path = img_files[0]
-            
-    sfe_data = b""
-    vsams_base64 = ""
-    terra_data = b""
-    
-    try:
-        if sfe_path.exists():
-            with open(sfe_path, "rb") as f:
-                sfe_data = f.read()
-        if vsams_path.exists():
-            with open(vsams_path, "rb") as f:
-                vsams_base64 = base64.b64encode(f.read()).decode("utf-8")
-        if terra_path.exists():
-            with open(terra_path, "rb") as f:
-                terra_data = f.read()
-    except Exception as io_err:
-        logger.error(f"Failed to read real sample images for vision modules: {io_err}")
+async def call_vision_modules(finish_type: str = "Hairline", image_base64: str | None = None) -> tuple[dict, bool]:
+    is_degraded = False
+    if image_base64:
+        logger.info(f"Calling vision modules concurrently with provided base64 image for finish_type: {finish_type}")
+        # Decode base64 to bytes for file uploads
+        try:
+            image_data = base64.b64decode(image_base64)
+        except Exception as e:
+            logger.error(f"Failed to decode base64 image: {e}. Falling back to degraded mode.")
+            image_data = b"dummy_content"
+            is_degraded = True
+    else:
+        logger.warning("No image provided. Using degraded mode (dummy content) for vision modules.")
+        image_base64 = "dummy_base64..."
+        image_data = b"dummy_content"
+        is_degraded = True
 
     async with httpx.AsyncClient(timeout=15.0) as client:
         try:
-            sfe_file = (sfe_path.name, sfe_data, "image/jpeg") if sfe_data else ("dummy.jpg", b"dummy_content", "image/jpeg")
-            vsams_payload = {"image_data": vsams_base64} if vsams_base64 else {"image_data": "base64..."}
-            terra_file = (terra_path.name, terra_data, "image/jpeg") if terra_data else ("dummy.jpg", b"dummy_content", "image/jpeg")
+            sfe_file = ("image.jpg", image_data, "image/jpeg")
+            vsams_payload = {"image_data": image_base64}
+            terra_file = ("image.jpg", image_data, "image/jpeg")
             
             results = await asyncio.gather(
                 client.post(f"{MODULE_002_URL}/analyze/image", data={"volume_ul": 2.0, "ref_diameter_mm": 24.0}, files={"file": sfe_file}),
@@ -91,7 +68,7 @@ async def call_vision_modules(finish_type: str = "Hairline") -> dict:
                     if "gloss" in data:
                         vision_metrics["gloss"] = data["gloss"]
                     
-            return vision_metrics
+            return vision_metrics, is_degraded
         except Exception as e:
             logger.error(f"Vision modules error: {e}")
             raise RuntimeError(f"Vision module error: {e}")
@@ -114,7 +91,7 @@ async def call_module_011_processability(req: OrchestrationRequest) -> Processab
         logger.error(f"Module 011 error: {e}")
         raise RuntimeError(f"Module 011 communication failed: {e}")
 
-async def call_module_012_matching(req: OrchestrationRequest, proc_level: int) -> MatchingResponse:
+async def call_module_012_matching(req: OrchestrationRequest, proc_level: int, task_id: str) -> MatchingResponse:
     logger.info(f"Calling module 012 at {MODULE_012_URL}")
     
     # Soft correction layer for BA vs Mirror misclassification based on physical crossover
@@ -132,7 +109,8 @@ async def call_module_012_matching(req: OrchestrationRequest, proc_level: int) -
     }
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            res = await client.post(f"{MODULE_012_URL}/match", json=payload)
+            headers = {"X-Request-ID": task_id}
+            res = await client.post(f"{MODULE_012_URL}/match", json=payload, headers=headers)
             if res.status_code != 200:
                 logger.error(f"Module 012 returned status {res.status_code}")
                 return MatchingResponse(recommendations=[], is_successful=False)
@@ -299,7 +277,7 @@ async def orchestrate_workflow(req: OrchestrationRequest):
         
         try:
             # Step 0: Vision Modules (002, 003, 007)
-            vision_data = await call_vision_modules(req.finish_type)
+            vision_data, is_degraded = await call_vision_modules(req.finish_type, req.image_base64)
             
             if "curvature_radius" in vision_data:
                 req.metrics.curvature_radius = vision_data["curvature_radius"]
@@ -323,7 +301,7 @@ async def orchestrate_workflow(req: OrchestrationRequest):
                 proc_result.level = max(1, min(5, proc_result.level + penalty))
             
             # Step 2: Matching (012)
-            match_result = await call_module_012_matching(req, proc_result.level)
+            match_result = await call_module_012_matching(req, proc_result.level, task_id)
             
             # Step 3: Reverse Engineering (013)
             rev_result = await call_module_013_reverse_engineering(req)
@@ -341,21 +319,22 @@ async def orchestrate_workflow(req: OrchestrationRequest):
                 "status": "matched", 
                 "result": match_result,
                 "reverse_engineered_result": rev_result,
-                "processability": proc_result.dict()
+                "processability": proc_result.dict(),
+                "degraded": is_degraded
             }
 
         
         except asyncio.TimeoutError as te:
             logger.error(f"[Task {task_id} | PID {pid}] Operation timed out during orchestration: {str(te)}")
-            return {"status": "error", "error": "Operation Timeout", "details": str(te)}
+            return {"status": "error", "error_code": "TIMEOUT", "module": "014", "message": f"Operation Timeout: {str(te)}"}
         
         except RuntimeError as re:
             logger.error(f"[Task {task_id} | PID {pid}] Remote module execution failed: {str(re)}")
-            return {"status": "error", "error": "Module Execution Failed", "details": str(re)}
+            return {"status": "error", "error_code": "MODULE_EXECUTION_FAILED", "module": "014", "message": f"Remote module execution failed: {str(re)}"}
         
         except Exception as e:
             logger.exception(f"[Task {task_id} | PID {pid}] Unhandled system error during orchestration: {str(e)}")
-            return {"status": "error", "error": "Internal System Error", "details": str(e)}
+            return {"status": "error", "error_code": "INTERNAL_ERROR", "module": "014", "message": f"Internal System Error: {str(e)}"}
         
         finally:
             logger.info(f"[Task {task_id} | PID {pid}] Orchestration workflow execution finished.")

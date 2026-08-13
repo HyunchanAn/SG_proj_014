@@ -100,3 +100,4 @@ class OrchestrationRequest(BaseModel):
     target: Step2Target
     normal_vector_data: list[float] = Field(..., description="3D 법선 벡터 데이터 시퀀스", json_schema_extra={"example": [0.1, 0.2, 0.9]})
     material_stiffness: float = Field(..., description="소재 강성 (MPa)", json_schema_extra={"example": 200000.0})
+    image_base64: str | None = Field(default=None, description="분석용 이미지 Base64 문자열 (미제공 시 Dummy fallback 사용)")
