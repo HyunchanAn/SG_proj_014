@@ -167,13 +167,15 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                         json={"target_properties": current_targets, "fixed_context": fixed_ctx}
                     )
                 else:
-                    logger.info(f"Calling 001 PolySim API (DE Warm-start): {config.MODULE_001_URL}/optimize")
+                    local_search_step = iteration - 1
+                    logger.info(f"Calling 001 PolySim API (DE Warm-start, step {local_search_step}): {config.MODULE_001_URL}/optimize")
                     res_001 = await client.post(
                         f"{config.MODULE_001_URL}/optimize", 
                         json={
                             "target_properties": current_targets,
                             "fixed_context": fixed_ctx,
-                            "initial_recipe": initial_recipe
+                            "initial_recipe": initial_recipe,
+                            "local_search_step": local_search_step
                         }
                     )
                 
