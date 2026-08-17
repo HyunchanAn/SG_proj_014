@@ -76,6 +76,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 )
 async def orchestrate(req: OrchestrationRequest):
     logger.info(f"Orchestration request received for substrate: {req.substrate_id}")
+    
+    if req.deep_search:
+        logger.warning(f"deep_search=True is not supported in synchronous /orchestrate endpoint for substrate {req.substrate_id}. Clamping to False to prevent timeout.")
+        req.deep_search = False
+        
     result = await orchestrate_workflow(req)
     logger.info(f"Orchestration completed successfully for substrate: {req.substrate_id}")
     return result
