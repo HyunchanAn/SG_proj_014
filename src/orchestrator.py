@@ -202,7 +202,8 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                             "target_properties": current_targets, 
                             "fixed_context": fixed_ctx, 
                             "target_weights": req.target_weights,
-                            "use_property_bounds": req.use_property_bounds
+                            "use_property_bounds": req.use_property_bounds,
+                            "deep_search": req.deep_search
                         }
                     )
                 else:
@@ -216,7 +217,8 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                             "initial_recipe": initial_recipe,
                             "local_search_step": local_search_step,
                             "target_weights": req.target_weights,
-                            "use_property_bounds": req.use_property_bounds
+                            "use_property_bounds": req.use_property_bounds,
+                            "deep_search": req.deep_search
                         }
                     )
                 

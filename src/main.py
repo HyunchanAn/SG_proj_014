@@ -14,7 +14,7 @@ from src.schemas import OrchestrationRequest
 logger.remove()
 logger.add(
     sys.stdout,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+    serialize=True,
     level="INFO"
 )
 # 에러 로그는 파일에도 상시 적재되도록 회전 로깅 탑재
