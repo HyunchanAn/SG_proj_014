@@ -163,10 +163,25 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
     }
     
     def calc_error(pred):
+        scales = {"Tg": 80.0, "점도(cP)": 5000.0, "측정_값": 2000.0}
+        active_keys = ["측정_값", "Tg", "점도(cP)"]
+        
+        if req.target_weights:
+            weights = req.target_weights
+        else:
+            w = 1.0 / len(active_keys)
+            weights = {k: w for k in active_keys}
+            
         err = 0.0
-        err += (abs(original_targets["측정_값"] - pred.get("측정_값", 1500)) / 2000.0) ** 2
-        err += (abs(original_targets["Tg"] - pred.get("Tg", -15)) / 80.0) ** 2
-        err += (abs(original_targets["점도(cP)"] - pred.get("점도(cP)", 2000)) / 5000.0) ** 2
+        for k in active_keys:
+            pred_val = pred.get(k, 0.0)
+            target_val = original_targets[k]
+            scale = scales.get(k, abs(target_val) + 1e-5)
+            w_k = weights.get(k, 1.0/len(active_keys))
+            
+            error_k = w_k * (abs(pred_val - target_val) / scale)
+            err += error_k ** 2
+            
         return math.sqrt(err)
 
     for iteration in range(1, MAX_ITERATIONS + 1):
@@ -183,7 +198,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     logger.info(f"Calling 001 PolySim API (NSGA-II): {config.MODULE_001_URL}/optimize_smart")
                     res_001 = await client.post(
                         f"{config.MODULE_001_URL}/optimize_smart", 
-                        json={"target_properties": current_targets, "fixed_context": fixed_ctx}
+                        json={"target_properties": current_targets, "fixed_context": fixed_ctx, "target_weights": req.target_weights}
                     )
                 else:
                     local_search_step = iteration - 1
@@ -194,7 +209,8 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                             "target_properties": current_targets,
                             "fixed_context": fixed_ctx,
                             "initial_recipe": initial_recipe,
-                            "local_search_step": local_search_step
+                            "local_search_step": local_search_step,
+                            "target_weights": req.target_weights
                         }
                     )
                 
