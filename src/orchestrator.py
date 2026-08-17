@@ -198,7 +198,12 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     logger.info(f"Calling 001 PolySim API (NSGA-II): {config.MODULE_001_URL}/optimize_smart")
                     res_001 = await client.post(
                         f"{config.MODULE_001_URL}/optimize_smart", 
-                        json={"target_properties": current_targets, "fixed_context": fixed_ctx, "target_weights": req.target_weights}
+                        json={
+                            "target_properties": current_targets, 
+                            "fixed_context": fixed_ctx, 
+                            "target_weights": req.target_weights,
+                            "use_property_bounds": req.use_property_bounds
+                        }
                     )
                 else:
                     local_search_step = iteration - 1
@@ -210,7 +215,8 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                             "fixed_context": fixed_ctx,
                             "initial_recipe": initial_recipe,
                             "local_search_step": local_search_step,
-                            "target_weights": req.target_weights
+                            "target_weights": req.target_weights,
+                            "use_property_bounds": req.use_property_bounds
                         }
                     )
                 

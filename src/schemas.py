@@ -99,7 +99,8 @@ class OrchestrationRequest(BaseModel):
     finish_type: str = Field(..., description="마감 종류 (예: Hairline, Mirror)", json_schema_extra={"example": "Hairline"})
     metrics: Step1Metrics
     target: Step2Target
-    target_weights: dict | None = Field(default=None, description="선택적 물성별 에러 가중치 (예: {'측정_값': 0.5, '점도(cP)': 0.3, 'Tg': 0.2})")
+    target_weights: dict | None = Field(default_factory=lambda: {"측정_값": 0.45, "점도(cP)": 0.35, "Tg": 0.20}, description="선택적 물성별 에러 가중치. (기본값: Data-driven)")
+    use_property_bounds: bool = Field(default=True, description="최적화 중 Property Bounds 패널티 사용 여부")
     normal_vector_data: list[float] = Field(..., description="3D 법선 벡터 데이터 시퀀스", json_schema_extra={"example": [0.1, 0.2, 0.9]})
     material_stiffness: float = Field(..., description="소재 강성 (MPa)", json_schema_extra={"example": 200000.0})
     image_base64: str | None = Field(default=None, description="분석용 이미지 Base64 문자열 (미제공 시 Dummy fallback 사용)")
