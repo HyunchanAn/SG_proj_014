@@ -226,7 +226,7 @@ async def test_full_pipeline_e2e_invalid_smiles_error(in_memory_db):
             result_data = orch_res.json()
 
             assert result_data["status"] == "error"
-            assert result_data["error"] == "Module Execution Failed"
-            assert "Invalid SMILES for monomer" in result_data["details"]
+            assert result_data["error_code"] == "REV_ENG_FAILED"
+            assert "Invalid SMILES" in result_data["message"]
     finally:
         del MONOMER_SMILES_MAP["BAD_SYNTAX"]
