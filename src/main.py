@@ -1,8 +1,9 @@
 import sys
 
 import uvicorn
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, APIRouter, Depends
 from fastapi.exceptions import RequestValidationError
+from src.security import verify_api_key, API_KEY_NAME, SG_SHARED_API_KEY
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -27,6 +28,7 @@ logger.add(
 )
 
 app = FastAPI(title="SG_proj_014 Central Orchestrator", version="0.1.0")
+api_router = APIRouter(dependencies=[Depends(verify_api_key)])
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,7 +59,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
-@app.post(
+@api_router.post(
     "/orchestrate",
     summary="E2E 모듈 오케스트레이션 (Step 1 -> Step 2 -> Step 3)",
     description="""
@@ -85,27 +87,29 @@ async def orchestrate(req: OrchestrationRequest):
     logger.info(f"Orchestration completed successfully for substrate: {req.substrate_id}")
     return result
 
-@app.post("/inverse_cvae")
+@api_router.post("/inverse_cvae")
 async def inverse_cvae(req: Request):
     """Proxy to 001 CVAE endpoint"""
     import httpx
 
     from src.config import config
     body = await req.json()
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(headers={API_KEY_NAME: SG_SHARED_API_KEY}) as client:
         res = await client.post(f"{config.MODULE_001_URL}/optimize_cvae", json=body, timeout=10.0)
     return res.json()
 
-@app.post("/inverse_nsga2")
+@api_router.post("/inverse_nsga2")
 async def inverse_nsga2(req: Request):
     """Proxy to 001 NSGA2 endpoint"""
     import httpx
 
     from src.config import config
     body = await req.json()
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(headers={API_KEY_NAME: SG_SHARED_API_KEY}) as client:
         res = await client.post(f"{config.MODULE_001_URL}/optimize_nsga2", json=body, timeout=60.0)
     return res.json()
+
+app.include_router(api_router)
 
 if __name__ == "__main__":
     uvicorn.run("src.main:app", host="0.0.0.0", port=8024, reload=True)

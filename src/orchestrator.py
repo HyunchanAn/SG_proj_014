@@ -3,6 +3,7 @@ import os
 import math
 
 import httpx
+from src.security import API_KEY_NAME, SG_SHARED_API_KEY
 from loguru import logger
 
 from src.config import config
@@ -47,16 +48,22 @@ async def call_vision_modules(finish_type: str = "Hairline", image_base64: str |
         image_data = b"dummy_content"
         is_degraded = True
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
+    async with httpx.AsyncClient(timeout=15.0, headers={API_KEY_NAME: SG_SHARED_API_KEY}) as client:
         try:
             sfe_file = ("image.jpg", image_data, "image/jpeg")
             vsams_payload = {"image_data": image_base64}
             terra_file = ("image.jpg", image_data, "image/jpeg")
             
+            sem = asyncio.Semaphore(2)
+            
+            async def post_sem(func, *args, **kwargs):
+                async with sem:
+                    return await func(*args, **kwargs)
+            
             results = await asyncio.gather(
-                client.post(f"{MODULE_002_URL}/analyze/image", data={"volume_ul": 2.0, "ref_diameter_mm": 24.0}, files={"file": sfe_file}),
-                client.post(f"{MODULE_003_URL}/analyze/roughness", json=vsams_payload),
-                client.post(f"{MODULE_007_URL}/api/v1/analyze", data={"ref_length_mm": 100.0, "roughness": 1.0}, files={"file": terra_file}),
+                post_sem(client.post, f"{MODULE_002_URL}/analyze/image", data={"volume_ul": 2.0, "ref_diameter_mm": 24.0}, files={"file": sfe_file}),
+                post_sem(client.post, f"{MODULE_003_URL}/analyze/roughness", json=vsams_payload),
+                post_sem(client.post, f"{MODULE_007_URL}/api/v1/analyze", data={"ref_length_mm": 100.0, "roughness": 1.0}, files={"file": terra_file}),
                 return_exceptions=True
             )
             logger.info(f"Vision modules result: {results}")
@@ -88,7 +95,7 @@ async def call_module_011_processability(req: OrchestrationRequest) -> Processab
         "material_stiffness": req.material_stiffness
     }
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=5.0, headers={API_KEY_NAME: SG_SHARED_API_KEY}) as client:
             res = await client.post(f"{MODULE_011_URL}/calculate_processability", json=payload)
             if res.status_code != 200:
                 logger.error(f"Module 011 returned status {res.status_code}")
@@ -117,7 +124,7 @@ async def call_module_012_matching(req: OrchestrationRequest, proc_level: int, t
         "required_processability_level": proc_level
     }
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=5.0, headers={API_KEY_NAME: SG_SHARED_API_KEY}) as client:
             headers = {"X-Request-ID": task_id}
             res = await client.post(f"{MODULE_012_URL}/match", json=payload, headers=headers)
             if res.status_code != 200:
@@ -191,7 +198,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
         ir_gnn_features = []
         best_recipe = {}
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, headers={API_KEY_NAME: SG_SHARED_API_KEY}) as client:
             try:
                 # 1. Call 001 (PolySim) to optimize recipe
                 if iteration == 1:
@@ -290,6 +297,7 @@ async def call_module_013_reverse_engineering(req: OrchestrationRequest) -> Veri
                     },
                     "xgboost_prediction": xgboost_prediction,
                     "ir_gnn_features": ir_gnn_features,
+                    "recipe": best_recipe,
                     "current_iteration": iteration
                 }
                 

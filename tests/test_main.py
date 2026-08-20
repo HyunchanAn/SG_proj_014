@@ -2,12 +2,15 @@
 from unittest.mock import patch
 
 import pytest
+import os
+os.environ["SG_SHARED_API_KEY"] = "test_secret_key"
 from fastapi.testclient import TestClient
 
 from src.main import app
 from src.schemas import MatchingResponse, ProcessabilityResult, VerificationResult
 
-client = TestClient(app)
+from src.security import API_KEY_NAME
+client = TestClient(app, headers={API_KEY_NAME: "test_secret_key"})
 
 @pytest.mark.anyio
 @patch("src.orchestrator.call_vision_modules")

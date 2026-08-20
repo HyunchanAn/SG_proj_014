@@ -1,8 +1,14 @@
 import pytest
+import os
+os.environ["SG_SHARED_API_KEY"] = "test_secret_key"
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from src.main import app
+from src.security import API_KEY_NAME
 from src.schemas import OrchestrationRequest, Step1Metrics, Step2Target
 
+client = TestClient(app, headers={API_KEY_NAME: "test_secret_key"})
 
 def test_adhesion_domain_rule():
     # Valid case

@@ -1,13 +1,17 @@
 import logging
-
+import os
 import httpx
 import pytest
 import respx
+from fastapi.testclient import TestClient
 from httpx import Response
 from sqlalchemy import Column, Float, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from src.main import app
+from src.security import API_KEY_NAME
+
+os.environ["SG_SHARED_API_KEY"] = "test_secret_key"
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +112,7 @@ async def test_full_pipeline_e2e_in_memory(in_memory_db):
 
     # 014 내부 로직 테스트를 위한 AsyncClient (실제 앱에 연결)
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver", headers={API_KEY_NAME: "test_secret_key"}) as client:
         # 먼저 모킹된 004 API를 찔러 피착재 정보 가져오기 시뮬레이션
         db_res = httpx.get("http://localhost:8004/adherends/search?roughness_md_max=1.0")
         target_adherend = db_res.json()[0]
@@ -196,7 +200,7 @@ async def test_full_pipeline_e2e_invalid_smiles_error(in_memory_db):
         )
 
         transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver", headers={API_KEY_NAME: "test_secret_key"}) as client:
             db_res = httpx.get("http://localhost:8004/adherends/search?roughness_md_max=1.0")
             target_adherend = db_res.json()[0]
 
